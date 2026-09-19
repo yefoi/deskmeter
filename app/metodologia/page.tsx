@@ -33,11 +33,36 @@ export default function Page() {
             Qué es Deskmeter
           </h2>
           <p className="mt-2">
-            Un panel para mirar la salud de una mesa de ayuda a partir del CSV
+            Un panel para mirar la salud de un helpdesk a partir del CSV
             exportado de tickets. No hay cuenta, ni API key, ni base de datos:
             el CSV se procesa en el navegador, la clasificación se pide a
             classifier.dev y nada se guarda en el servidor.
           </p>
+        </div>
+
+        <div>
+          <h2 className="text-base font-semibold text-foreground">
+            En qué se diferencia de un panel corporativo
+          </h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5">
+            <li>
+              <strong>Instantáneo y público</strong>: abres la URL y el panel
+              está en segundos. Sin demo comercial, sin formulario de contacto
+              y sin esperas de 24-48 horas.
+            </li>
+            <li>
+              <strong>Sin backend propio ni retención</strong>: el CSV no se
+              sube a ningún servidor ni se guarda en una base de datos (otros
+              paneles conservan el export hasta 30 días). Solo viaja a
+              classifier.dev el texto redactado de cada ticket, que no se
+              almacena.
+            </li>
+            <li>
+              <strong>Metodología abierta</strong>: el índice de salud no es un
+              informe cerrado; sus pesos, umbrales y límites están publicados
+              aquí y el cálculo vive en <code>lib/tickets/indice.ts</code>.
+            </li>
+          </ul>
         </div>
 
         <div>

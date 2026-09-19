@@ -24,7 +24,7 @@ export const URGENCIAS: EtiquetaDimension<Urgencia>[] = [
 export const UMBRAL_REVISION = 0.7;
 
 export const INSTRUCCIONES_CATEGORIA =
-  "Clasifica un ticket de una mesa de ayuda de soporte técnico por el área que debe resolverlo. " +
+  "Clasifica un ticket de un helpdesk de soporte técnico por el área que debe resolverlo. " +
   "hardware: equipos físicos, impresoras, periféricos. " +
   "software: aplicaciones, errores, licencias, actualizaciones. " +
   "redes: conectividad, wifi, VPN, correo. " +

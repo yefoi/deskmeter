@@ -38,11 +38,27 @@ export default function Subidor({
             Deskmeter
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-foreground/70">
-            Sube el CSV exportado de tu mesa de ayuda y obtén un panel de salud:
+            Sube el CSV exportado de tu helpdesk y obtén un panel de salud:
             tendencia del índice, categorías, urgencia y los tickets que conviene
             revisar a mano. Si solo quieres verlo funcionar, carga los datos
             demo.
           </p>
+
+          <ul className="mt-4 flex flex-wrap gap-2 text-xs">
+            {[
+              "Sin registro",
+              "Datos en tu navegador",
+              "Metodología abierta",
+            ].map((sello) => (
+              <li
+                key={sello}
+                className="inline-flex items-center gap-1.5 rounded-full border border-borde bg-background/60 px-2.5 py-1 text-foreground/70"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-acento" />
+                {sello}
+              </li>
+            ))}
+          </ul>
 
           <div
             onDragOver={(evento) => {

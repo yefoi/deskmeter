@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Deskmeter · Salud de tu mesa de ayuda",
+  title: "Deskmeter · Salud de tu helpdesk",
   description:
-    "Deskmeter: sube un CSV de tickets, clasifícalos con classifier.dev y mide la salud de tu mesa de ayuda por semana y por mes.",
+    "Deskmeter: sube un CSV de tickets, clasifícalos con classifier.dev y mide la salud de tu helpdesk por semana y por mes.",
 };
 
 const GUION_TEMA = `(function(){try{var t=localStorage.getItem("deskmeter-tema");var o=t?t==="oscuro":window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.classList.toggle("dark",o);}catch(e){}})();`;

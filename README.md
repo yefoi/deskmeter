@@ -1,6 +1,6 @@
 # Deskmeter
 
-Panel de salud de una mesa de ayuda a partir del CSV de tickets exportado, con la
+Panel de salud de un helpdesk a partir del CSV de tickets exportado, con la
 clasificación de [classifier.dev](https://classifier.dev) (sin API key ni cuenta) y un
 índice propio. Next.js 15 (App Router), TypeScript, Recharts y papaparse.
 
@@ -20,6 +20,16 @@ clasificación de [classifier.dev](https://classifier.dev) (sin API key ni cuent
 - **Visualización**: portada con tendencia del índice, mapa de calor categoría × semana,
   histograma apilado, tabla de tickets en revisión manual y KPI; página `/metodologia`;
   tema claro/oscuro; responsive.
+
+## Qué cambia respecto a un panel corporativo
+
+- **Instantáneo y público**: abrir la URL, subir el CSV y ver el panel en segundos. Sin
+  demo comercial, sin formulario de contacto y sin esperas de 24-48 horas.
+- **Sin backend propio ni persistencia**: el CSV se procesa en el navegador y no se
+  guarda en ninguna base de datos (otros paneles retienen el export hasta 30 días). Solo
+  viaja a classifier.dev el texto redactado de cada ticket.
+- **Índice con metodología abierta**: pesos, umbrales y límites están en `/metodologia` y
+  en `lib/tickets/indice.ts`, no en un informe corporativo cerrado.
 
 ## Puesta en marcha
 

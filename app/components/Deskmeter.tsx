@@ -7,6 +7,7 @@ import { generarTicketsDemo } from "@/lib/tickets/demo";
 import type { Ticket, Tier } from "@/lib/tickets/tipos";
 import EsqueletoPanel from "./EsqueletoPanel";
 import PanelResultados from "./PanelResultados";
+import PorQue from "./PorQue";
 import Progreso, { type EstadoProgreso } from "./Progreso";
 import Subidor from "./Subidor";
 
@@ -150,6 +151,7 @@ export default function Deskmeter() {
             </p>
           )}
           {!progreso && <ComoFunciona />}
+          {!progreso && <PorQue />}
         </div>
       )}
     </main>

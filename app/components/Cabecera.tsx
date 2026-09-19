@@ -13,7 +13,7 @@ export default function Cabecera() {
               Desk<span className="text-acento">meter</span>
             </span>
             <span className="hidden text-xs text-foreground/60 sm:inline">
-              salud de tu mesa de ayuda
+              salud de tu helpdesk
             </span>
           </span>
         </Link>
