@@ -1,15 +1,71 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  faqJsonLd,
+  JsonLd,
+  migasJsonLd,
+} from "@/app/components/DatosEstructurados";
+import { sitioPublico } from "@/lib/sitio";
 
 export const metadata: Metadata = {
-  title: "Metodología · Deskmeter",
+  title: "Metodología",
   description:
     "Cómo se procesa el CSV de tickets en Deskmeter, cómo se redactan los datos personales, cómo clasifica classifier.dev y cómo se calcula el índice de salud.",
+  alternates: {
+    canonical: "/metodologia",
+    languages: {
+      es: "/metodologia",
+      en: "/en/methodology",
+      "x-default": "/metodologia",
+    },
+  },
+  openGraph: {
+    type: "article",
+    url: "/metodologia",
+    title: "Metodología · Deskmeter",
+    description:
+      "Pesos, umbrales y límites del índice de salud, la redacción de PII y la clasificación en dos pasadas con classifier.dev.",
+  },
 };
+
+const PREGUNTAS = [
+  {
+    pregunta: "¿Qué columnas necesita el CSV?",
+    respuesta:
+      "Fecha, asunto y descripción. Son opcionales estado, prioridad y tiempo_resolucion_horas. Los encabezados se normalizan (tildes, mayúsculas y separadores dan igual) y se aceptan alias como date, subject o description, además de fechas ISO (2026-09-18) o españolas (18/09/2026).",
+  },
+  {
+    pregunta: "¿Sirve el CSV de cualquier herramienta de tickets?",
+    respuesta:
+      "Sí, siempre que incluya esas tres columnas o sus equivalentes (por ejemplo created at, subject y description). El parser acepta alias habituales de Zendesk, Freshdesk, Jira o Zoho y separadores de coma, punto y coma o tabulador. Si el export es muy distinto —sin fecha o con columnas partidas— el panel avisa de las columnas que faltan y no envía nada a classifier.dev.",
+  },
+  {
+    pregunta: "¿Se guardan mis tickets en algún servidor?",
+    respuesta:
+      "No. El CSV se procesa en el navegador y desaparece al recargar la página. Solo viaja a classifier.dev el texto redactado de cada ticket, y classifier.dev declara que no lo almacena.",
+  },
+  {
+    pregunta: "¿Cómo se calcula el índice de salud?",
+    respuesta:
+      "Pondera volumen invertido (20 %), porcentaje de críticos y altos (40 %), porcentaje en revisión manual (20 %) y tiempo medio de resolución (20 %), con renormalización entre los componentes disponibles cuando falta el tiempo. La tabla completa está más arriba, en esta misma página.",
+  },
+  {
+    pregunta: "¿Qué pasa si la clasificación no está segura?",
+    respuesta:
+      "Los tickets con confianza menor que 0,7 (o sin score) se marcan para revisión manual y aparecen en una tabla con su etiqueta, su confianza y el motivo. Esa tabla se puede exportar a CSV para trabajar sobre ella.",
+  },
+];
 
 export default function Page() {
   return (
     <main className="mx-auto w-full max-w-3xl px-4 pb-8 pt-8 sm:px-6">
+      <JsonLd
+        datos={migasJsonLd([
+          { nombre: "Deskmeter", ruta: `${sitioPublico()}/` },
+          { nombre: "Metodología", ruta: `${sitioPublico()}/metodologia` },
+        ])}
+      />
+      <JsonLd datos={faqJsonLd(PREGUNTAS)} />
       <nav className="mb-6 text-xs text-foreground/60" aria-label="Migas de pan">
         <Link href="/" className="underline underline-offset-2 hover:text-foreground">
           Panel
@@ -236,6 +292,24 @@ export default function Page() {
             nada ni llamar a ninguna API. No es una muestra real de ninguna
             organización.
           </p>
+        </div>
+
+        <div>
+          <h2 className="text-base font-semibold text-foreground">
+            Preguntas frecuentes
+          </h2>
+          <dl className="mt-3 flex flex-col gap-4">
+            {PREGUNTAS.map((pregunta) => (
+              <div key={pregunta.pregunta}>
+                <dt className="font-medium text-foreground">
+                  {pregunta.pregunta}
+                </dt>
+                <dd className="mt-1 text-foreground/80">
+                  {pregunta.respuesta}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
         <div>

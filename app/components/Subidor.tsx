@@ -20,12 +20,38 @@ export default function Subidor({
   tier,
   onTier,
 }: Props) {
-  const { t } = useIdioma();
+  const { idioma, t } = useIdioma();
   const [arrastrando, setArrastrando] = useState(false);
   const entrada = useRef<HTMLInputElement>(null);
 
   const elegirArchivo = (archivo: File | undefined) => {
     if (archivo) onArchivo(archivo);
+  };
+
+  const descargarPlantilla = () => {
+    const cabecera =
+      "fecha,asunto,descripcion,estado,prioridad,tiempo_resolucion_horas";
+    const filas =
+      idioma === "es"
+        ? [
+            '18/09/2026,La impresora no imprime,"Se queda la cola atascada",cerrado,alta,3.5',
+            '2026-09-19,No puedo acceder al correo,"La contraseña ha caducado",abierto,normal,',
+          ]
+        : [
+            '18/09/2026,Printer won\'t print,"Jobs stay queued",closed,high,3.5',
+            '2026-09-19,Can\'t access my email,"The password has expired",open,normal,',
+          ];
+    const csv = `\uFEFF${[cabecera, ...filas].join("\r\n")}`;
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement("a");
+    enlace.href = url;
+    enlace.download =
+      idioma === "es" ? "deskmeter-plantilla.csv" : "deskmeter-template.csv";
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -88,11 +114,19 @@ export default function Subidor({
               >
                 {t.subidor.demo}
               </button>
+              <button
+                type="button"
+                disabled={procesando}
+                onClick={descargarPlantilla}
+                className="rounded-lg border border-dashed border-borde px-4 py-2 text-sm text-foreground/70 transition hover:bg-panel-suave disabled:opacity-50"
+              >
+                {t.subidor.plantilla}
+              </button>
             </div>
             <input
               ref={entrada}
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               className="hidden"
               onChange={(evento) => elegirArchivo(evento.target.files?.[0])}
             />

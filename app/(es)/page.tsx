@@ -1,10 +1,25 @@
+import type { Metadata } from "next";
 import Deskmeter from "@/app/components/Deskmeter";
+import {
+  aplicacionJsonLd,
+  JsonLd,
+} from "@/app/components/DatosEstructurados";
 import { ProveedorIdioma } from "@/app/components/idioma";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+    languages: { es: "/", en: "/en", "x-default": "/" },
+  },
+};
 
 export default function Page() {
   return (
-    <ProveedorIdioma idioma="es">
-      <Deskmeter />
-    </ProveedorIdioma>
+    <>
+      <JsonLd datos={aplicacionJsonLd("es")} />
+      <ProveedorIdioma idioma="es">
+        <Deskmeter />
+      </ProveedorIdioma>
+    </>
   );
 }

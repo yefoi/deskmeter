@@ -1,15 +1,71 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  faqJsonLd,
+  JsonLd,
+  migasJsonLd,
+} from "@/app/components/DatosEstructurados";
+import { sitioPublico } from "@/lib/sitio";
 
 export const metadata: Metadata = {
-  title: "Methodology · Deskmeter",
+  title: "Methodology",
   description:
     "How Deskmeter processes the ticket CSV, redacts personal data, classifies with classifier.dev and computes the health index.",
+  alternates: {
+    canonical: "/en/methodology",
+    languages: {
+      es: "/metodologia",
+      en: "/en/methodology",
+      "x-default": "/metodologia",
+    },
+  },
+  openGraph: {
+    type: "article",
+    url: "/en/methodology",
+    title: "Methodology · Deskmeter",
+    description:
+      "Weights, thresholds and limits of the health index, PII redaction and two-pass classification with classifier.dev.",
+  },
 };
+
+const PREGUNTAS = [
+  {
+    pregunta: "Which columns does the CSV need?",
+    respuesta:
+      "Date, subject and description. Optional: status, priority and resolution time in hours. Headers are normalised (accents, case and separators do not matter) and aliases such as date, subject or description are accepted, with ISO (2026-09-18) or Spanish (18/09/2026) dates.",
+  },
+  {
+    pregunta: "Does a CSV from any ticketing tool work?",
+    respuesta:
+      "Yes, as long as it carries those three columns or their equivalents (for instance created at, subject and description). The parser accepts usual aliases from Zendesk, Freshdesk, Jira or Zoho and comma, semicolon or tab separators. If the export is too different —no date, or split columns— the dashboard reports the missing columns and sends nothing to classifier.dev.",
+  },
+  {
+    pregunta: "Are my tickets stored on any server?",
+    respuesta:
+      "No. The CSV is processed in the browser and disappears when you reload the page. Only the redacted text of each ticket travels to classifier.dev, and classifier.dev states that it does not store it.",
+  },
+  {
+    pregunta: "How is the health index computed?",
+    respuesta:
+      "It weighs inverted volume (20%), share of critical and high tickets (40%), share under manual review (20%) and average resolution time (20%), renormalising across the available components when time is missing. The full table is above, on this same page.",
+  },
+  {
+    pregunta: "What happens when the classification is unsure?",
+    respuesta:
+      "Tickets with confidence below 0.7 (or no score) are flagged for manual review and listed in a table with their label, confidence and reason. That table can be exported to CSV to work on it.",
+  },
+];
 
 export default function Page() {
   return (
     <main className="mx-auto w-full max-w-3xl px-4 pb-8 pt-8 sm:px-6">
+      <JsonLd
+        datos={migasJsonLd([
+          { nombre: "Deskmeter", ruta: `${sitioPublico()}/en` },
+          { nombre: "Methodology", ruta: `${sitioPublico()}/en/methodology` },
+        ])}
+      />
+      <JsonLd datos={faqJsonLd(PREGUNTAS)} />
       <nav className="mb-6 text-xs text-foreground/60" aria-label="Breadcrumb">
         <Link href="/en" className="underline underline-offset-2 hover:text-foreground">
           Dashboard
@@ -233,6 +289,24 @@ export default function Page() {
             anything or calling any API. It is not a real sample from any
             organisation.
           </p>
+        </div>
+
+        <div>
+          <h2 className="text-base font-semibold text-foreground">
+            Frequently asked questions
+          </h2>
+          <dl className="mt-3 flex flex-col gap-4">
+            {PREGUNTAS.map((pregunta) => (
+              <div key={pregunta.pregunta}>
+                <dt className="font-medium text-foreground">
+                  {pregunta.pregunta}
+                </dt>
+                <dd className="mt-1 text-foreground/80">
+                  {pregunta.respuesta}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
         <div>

@@ -21,11 +21,50 @@ export const COLUMNAS_OBLIGATORIAS: ColumnaLogica[] = [
 export const LIMITE_FILAS = 5000;
 
 const ALIAS: Record<ColumnaLogica, string[]> = {
-  fecha: ["fecha", "date", "fecha_apertura", "fecha_creacion", "creado", "created_at", "opened_at"],
-  asunto: ["asunto", "subject", "titulo", "title", "resumen"],
-  descripcion: ["descripcion", "description", "detalle", "cuerpo", "body", "mensaje"],
-  estado: ["estado", "status", "situacion"],
-  prioridad: ["prioridad", "priority"],
+  fecha: [
+    "fecha",
+    "date",
+    "fecha_apertura",
+    "fecha_creacion",
+    "fecha_de_apertura",
+    "fecha_de_creacion",
+    "creado",
+    "created",
+    "opened",
+    "created_at",
+    "opened_at",
+    "date_created",
+    "creation_date",
+    "created_date",
+    "created_time",
+    "opened_time",
+  ],
+  asunto: [
+    "asunto",
+    "subject",
+    "titulo",
+    "title",
+    "resumen",
+    "summary",
+    "asunto_del_ticket",
+    "ticket_subject",
+  ],
+  descripcion: [
+    "descripcion",
+    "description",
+    "detalle",
+    "cuerpo",
+    "body",
+    "mensaje",
+    "message",
+    "contenido",
+    "content",
+    "details",
+    "descripcion_del_ticket",
+    "detalle_del_ticket",
+  ],
+  estado: ["estado", "status", "situacion", "state", "ticket_status", "estado_del_ticket"],
+  prioridad: ["prioridad", "priority", "severity", "urgencia", "ticket_priority", "prioridad_del_ticket"],
   tiempo_resolucion_horas: [
     "tiempo_resolucion_horas",
     "tiempo_de_resolucion_horas",
@@ -34,7 +73,12 @@ const ALIAS: Record<ColumnaLogica, string[]> = {
     "tiempo_resolucion",
     "tiempo_de_resolucion",
     "duracion_horas",
+    "resolucion_h",
     "resolution_hours",
+    "resolution_time",
+    "resolution_time_hours",
+    "time_to_resolution",
+    "full_resolution_time_hours",
   ],
 };
 
@@ -43,13 +87,60 @@ export interface FilaInvalida {
   motivo: string;
 }
 
+export type MapeoColumnas = Partial<Record<ColumnaLogica, string>>;
+
 export interface ResultadoParseoCsv {
   tickets: TicketCrudo[];
   columnasPresentes: ColumnaLogica[];
   columnasFaltantes: ColumnaLogica[];
+  encabezados: string[];
+  vistaPrevia: Record<string, string>[];
+  mapeoDetectado: MapeoColumnas;
   filasDescartadas: number;
   filasInvalidas: FilaInvalida[];
   errores: string[];
+}
+
+const MAX_CARACTERES_VISTA_PREVIA = 120;
+
+function vistaPreviaDe(filas: Record<string, string>[]): Record<string, string>[] {
+  const muestra: Record<string, string>[] = [];
+  for (const fila of filas) {
+    const valores = Object.values(fila).filter(
+      (valor) => (valor ?? "").trim() !== "",
+    );
+    if (valores.length === 0) continue;
+    const recortada: Record<string, string> = {};
+    for (const [columna, valor] of Object.entries(fila)) {
+      const texto = valor ?? "";
+      recortada[columna] =
+        texto.length > MAX_CARACTERES_VISTA_PREVIA
+          ? `${texto.slice(0, MAX_CARACTERES_VISTA_PREVIA - 1)}…`
+          : texto;
+    }
+    muestra.push(recortada);
+    if (muestra.length >= 3) break;
+  }
+  return muestra;
+}
+
+function aplicarMapeo(
+  columnas: Map<ColumnaLogica, string>,
+  encabezados: string[],
+  mapeo?: MapeoColumnas,
+) {
+  if (!mapeo) return;
+  for (const [logica, encabezado] of Object.entries(mapeo) as [
+    ColumnaLogica,
+    string | undefined,
+  ][]) {
+    if (encabezado === undefined) continue;
+    if (encabezado === "" || !encabezados.includes(encabezado)) {
+      columnas.delete(logica);
+    } else {
+      columnas.set(logica, encabezado);
+    }
+  }
 }
 
 export function normalizarEncabezado(crudo: string): string {
@@ -77,6 +168,37 @@ function detectarColumnas(encabezados: string[]): Map<ColumnaLogica, string> {
       alias.includes(encabezado.normalizado),
     );
     if (encontrado) mapa.set(logica, encontrado.original);
+  }
+
+  if (!mapa.has("fecha")) {
+    const heuristica = normalizados.find(
+      (encabezado) =>
+        /(fecha|date|apertura|opened|created|creacion|creado)/.test(
+          encabezado.normalizado,
+        ) &&
+        !/(resol|close|cierre|update|actualiz|reply|respuesta)/.test(
+          encabezado.normalizado,
+        ),
+    );
+    if (heuristica) mapa.set("fecha", heuristica.original);
+  }
+
+  if (!mapa.has("asunto")) {
+    const heuristica = normalizados.find((encabezado) =>
+      /(asunto|subject|summary|title|titulo|resumen)/.test(
+        encabezado.normalizado,
+      ),
+    );
+    if (heuristica) mapa.set("asunto", heuristica.original);
+  }
+
+  if (!mapa.has("descripcion")) {
+    const heuristica = normalizados.find((encabezado) =>
+      /(descrip|description|detalle|detall|body|cuerpo|message|mensaje|content|contenido|details)/.test(
+        encabezado.normalizado,
+      ),
+    );
+    if (heuristica) mapa.set("descripcion", heuristica.original);
   }
 
   if (!mapa.has("tiempo_resolucion_horas")) {
@@ -108,12 +230,16 @@ export function parsearCsv(
   texto: string,
   limiteFilas = LIMITE_FILAS,
   idioma: Idioma = "es",
+  mapeo?: MapeoColumnas,
 ): ResultadoParseoCsv {
   const mensajes = TEXTOS_CSV[idioma];
   const base: ResultadoParseoCsv = {
     tickets: [],
     columnasPresentes: [],
     columnasFaltantes: [],
+    encabezados: [],
+    vistaPrevia: [],
+    mapeoDetectado: {},
     filasDescartadas: 0,
     filasInvalidas: [],
     errores: [],
@@ -131,15 +257,25 @@ export function parsearCsv(
 
   const encabezados = resultado.meta.fields ?? [];
   const columnas = detectarColumnas(encabezados);
+  aplicarMapeo(columnas, encabezados, mapeo);
   const presentes = [...columnas.keys()];
   const faltantes = COLUMNAS_OBLIGATORIAS.filter((columna) => !columnas.has(columna));
+  const vistaPrevia = vistaPreviaDe(resultado.data);
+  const mapeoDetectado = Object.fromEntries(columnas) as MapeoColumnas;
 
   if (faltantes.length > 0) {
+    const detectadas =
+      encabezados.length > 0
+        ? ` ${mensajes.columnasDetectadas(encabezados.join(", "))}`
+        : "";
     return {
       ...base,
       columnasPresentes: presentes,
       columnasFaltantes: faltantes,
-      errores: [mensajes.faltan(faltantes.join(", "))],
+      encabezados,
+      vistaPrevia,
+      mapeoDetectado,
+      errores: [mensajes.faltan(faltantes.join(", ")) + detectadas],
     };
   }
 
@@ -197,6 +333,9 @@ export function parsearCsv(
     tickets,
     columnasPresentes: presentes,
     columnasFaltantes: [],
+    encabezados,
+    vistaPrevia,
+    mapeoDetectado,
     filasDescartadas: descartadas,
     filasInvalidas,
     errores: base.errores,

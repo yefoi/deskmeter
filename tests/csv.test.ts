@@ -90,6 +90,75 @@ no es una fecha,Algo,Pasa algo
     );
   });
 
+  it("acepta encabezados de Zendesk, Jira y Freshdesk", () => {
+    const zendesk = `Created at,Subject,Description,Status,Priority
+2026-09-01 10:00,VPN no conecta,"Se cae cada rato",Open,High
+`;
+    const resultado = parsearCsv(zendesk);
+    expect(resultado.columnasFaltantes).toEqual([]);
+    expect(resultado.tickets[0].asunto).toBe("VPN no conecta");
+    expect(resultado.tickets[0].estado).toBe("Open");
+    expect(resultado.tickets[0].prioridad).toBe("High");
+
+    const jira = `Created,Summary,Description
+2026-09-02,Error al guardar,La aplicación se cierra
+`;
+    expect(parsearCsv(jira).tickets).toHaveLength(1);
+
+    const freshdesk = `Created time,Subject,Description
+2026-09-03,No imprime,La cola se atasca
+`;
+    expect(parsearCsv(freshdesk).tickets).toHaveLength(1);
+  });
+
+  it("deduce columnas con nombres parecidos", () => {
+    const csv = `Ticket ID,Created,Summary,Details
+1,2026-09-02,Algo falla,Detalle del problema
+`;
+    const resultado = parsearCsv(csv);
+    expect(resultado.tickets[0].asunto).toBe("Algo falla");
+    expect(resultado.tickets[0].descripcion).toBe("Detalle del problema");
+  });
+
+  it("menciona las columnas detectadas cuando faltan obligatorias", () => {
+    const resultado = parsearCsv("ticket_id;created_at;notas\n1;2026-09-01;hola\n");
+    expect(resultado.errores[0]).toContain("columnas obligatorias");
+    expect(resultado.errores[0]).toContain("Columnas detectadas");
+    expect(resultado.errores[0]).toContain("ticket_id");
+  });
+
+  it("respeta un mapeo manual de columnas", () => {
+    const csv = `A;B;C
+Algo falla;2026-09-01;Detalle del problema
+`;
+    const resultado = parsearCsv(csv, undefined, "es", {
+      fecha: "B",
+      asunto: "A",
+      descripcion: "C",
+    });
+    expect(resultado.columnasFaltantes).toEqual([]);
+    expect(resultado.tickets[0].asunto).toBe("Algo falla");
+    expect(resultado.tickets[0].descripcion).toBe("Detalle del problema");
+    expect(resultado.tickets[0].fecha.getMonth()).toBe(8);
+  });
+
+  it("devuelve encabezados, vista previa y mapeo detectado", () => {
+    const resultado = parsearCsv("ticket_id;created_at;notas\n1;2026-09-01;hola\n");
+    expect(resultado.encabezados).toEqual(["ticket_id", "created_at", "notas"]);
+    expect(resultado.vistaPrevia[0].ticket_id).toBe("1");
+    expect(resultado.mapeoDetectado.fecha).toBe("created_at");
+    expect(resultado.columnasFaltantes).toEqual(["asunto", "descripcion"]);
+  });
+
+  it("lee CSV con separador de punto y coma", () => {
+    const csv = `fecha;asunto;descripcion
+18/09/2026;Sin conexión;El router no responde
+`;
+    const resultado = parsearCsv(csv);
+    expect(resultado.tickets).toHaveLength(1);
+    expect(resultado.tickets[0].asunto).toBe("Sin conexión");
+  });
+
   it("avisa si el archivo está vacío", () => {
     const resultado = parsearCsv("   ");
     expect(resultado.tickets).toHaveLength(0);

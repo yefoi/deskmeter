@@ -2,11 +2,17 @@
 
 import { useCallback, useRef, useState } from "react";
 import { clasificarTickets } from "@/lib/tickets/clasificar";
-import { LIMITE_FILAS, parsearCsv } from "@/lib/tickets/csv";
+import {
+  LIMITE_FILAS,
+  parsearCsv,
+  type MapeoColumnas as Mapeo,
+} from "@/lib/tickets/csv";
 import { generarTicketsDemo } from "@/lib/tickets/demo";
+import { excelACsv } from "@/lib/tickets/excel";
 import type { Ticket, Tier } from "@/lib/tickets/tipos";
 import EsqueletoPanel from "./EsqueletoPanel";
 import { useIdioma } from "./idioma";
+import MapeoColumnas, { type AnalisisPendiente } from "./MapeoColumnas";
 import PanelResultados from "./PanelResultados";
 import PorQue from "./PorQue";
 import Progreso, { type EstadoProgreso } from "./Progreso";
@@ -18,6 +24,9 @@ export default function Deskmeter() {
   const [fuente, setFuente] = useState<"demo" | "csv" | null>(null);
   const [nombreArchivo, setNombreArchivo] = useState<string | null>(null);
   const [progreso, setProgreso] = useState<EstadoProgreso | null>(null);
+  const [mapeoPendiente, setMapeoPendiente] = useState<AnalisisPendiente | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [tier, setTier] = useState<Tier>("fast");
@@ -29,12 +38,13 @@ export default function Deskmeter() {
     setFuente("demo");
     setNombreArchivo(null);
     setProgreso(null);
+    setMapeoPendiente(null);
     setError(null);
     setAviso(null);
   }, [idioma]);
 
-  const procesarArchivo = useCallback(
-    async (archivo: File) => {
+  const procesarTexto = useCallback(
+    async (texto: string, nombre: string, mapeo?: Mapeo) => {
       controlador.current?.abort();
       setTickets(null);
       setFuente(null);
@@ -43,19 +53,24 @@ export default function Deskmeter() {
       setError(null);
       setAviso(null);
 
-      let texto: string;
-      try {
-        texto = await archivo.text();
-      } catch {
-        setError(t.deskmeter.errorLectura);
-        return;
-      }
+      const resultado = parsearCsv(texto, LIMITE_FILAS, idioma, mapeo);
 
-      const resultado = parsearCsv(texto, LIMITE_FILAS, idioma);
       if (resultado.columnasFaltantes.length > 0) {
+        if (!mapeo && resultado.encabezados.length > 0) {
+          setMapeoPendiente({
+            nombreArchivo: nombre,
+            texto,
+            encabezados: resultado.encabezados,
+            vistaPrevia: resultado.vistaPrevia,
+            mapeoDetectado: resultado.mapeoDetectado,
+            faltantes: resultado.columnasFaltantes,
+          });
+          return;
+        }
         setError(resultado.errores[0] ?? t.deskmeter.errorColumnas);
         return;
       }
+
       if (resultado.tickets.length === 0) {
         setError(t.deskmeter.errorSinFilas);
         return;
@@ -68,7 +83,7 @@ export default function Deskmeter() {
       avisos.push(...resultado.errores);
       setAviso(avisos.join(" ") || null);
       setFuente("csv");
-      setNombreArchivo(archivo.name);
+      setNombreArchivo(nombre);
 
       const control = new AbortController();
       controlador.current = control;
@@ -103,6 +118,42 @@ export default function Deskmeter() {
     [idioma, t, tier],
   );
 
+  const procesarArchivo = useCallback(
+    async (archivo: File) => {
+      setMapeoPendiente(null);
+      const esExcel =
+        /\.xlsx$/i.test(archivo.name) ||
+        archivo.type.includes("spreadsheetml");
+
+      let texto: string;
+      if (esExcel) {
+        try {
+          texto = await excelACsv(archivo);
+        } catch {
+          setError(t.deskmeter.errorExcel);
+          return;
+        }
+      } else {
+        try {
+          texto = await archivo.text();
+        } catch {
+          setError(t.deskmeter.errorLectura);
+          return;
+        }
+      }
+
+      await procesarTexto(texto, archivo.name);
+    },
+    [procesarTexto, t],
+  );
+
+  const aplicarMapeo = (mapeo: Mapeo) => {
+    if (!mapeoPendiente) return;
+    const pendiente = mapeoPendiente;
+    setMapeoPendiente(null);
+    void procesarTexto(pendiente.texto, pendiente.nombreArchivo, mapeo);
+  };
+
   const cancelar = () => controlador.current?.abort();
 
   const reiniciar = () => {
@@ -110,6 +161,7 @@ export default function Deskmeter() {
     setTickets(null);
     setFuente(null);
     setNombreArchivo(null);
+    setMapeoPendiente(null);
     setAviso(null);
     setError(null);
   };
@@ -126,13 +178,21 @@ export default function Deskmeter() {
         />
       ) : (
         <div className="flex flex-col gap-6">
-          <Subidor
-            onArchivo={procesarArchivo}
-            onDemo={cargarDemo}
-            procesando={progreso !== null}
-            tier={tier}
-            onTier={setTier}
-          />
+          {mapeoPendiente ? (
+            <MapeoColumnas
+              analisis={mapeoPendiente}
+              onAplicar={aplicarMapeo}
+              onCancelar={() => setMapeoPendiente(null)}
+            />
+          ) : (
+            <Subidor
+              onArchivo={procesarArchivo}
+              onDemo={cargarDemo}
+              procesando={progreso !== null}
+              tier={tier}
+              onTier={setTier}
+            />
+          )}
           {progreso && (
             <div className="aparecer flex flex-col gap-6">
               <Progreso estado={progreso} onCancelar={cancelar} />
@@ -149,8 +209,8 @@ export default function Deskmeter() {
               {aviso}
             </p>
           )}
-          {!progreso && <ComoFunciona />}
-          {!progreso && <PorQue />}
+          {!progreso && !mapeoPendiente && <ComoFunciona />}
+          {!progreso && !mapeoPendiente && <PorQue />}
         </div>
       )}
     </main>

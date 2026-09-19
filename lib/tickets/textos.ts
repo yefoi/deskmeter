@@ -21,8 +21,9 @@ const TEXTOS_ES = {
     arrastra: "Arrastra aquí el CSV de tickets",
     elegir: "Elegir archivo",
     demo: "Cargar datos demo",
+    plantilla: "Descargar plantilla",
     columnas:
-      "Columnas mínimas: fecha, asunto, descripcion. Opcionales: estado, prioridad, tiempo_resolucion_horas.",
+      "Columnas mínimas: fecha, asunto, descripcion. Opcionales: estado, prioridad, tiempo_resolucion_horas. Si no se detectan, podrás asignarlas a mano. Acepta CSV y Excel (.xlsx).",
     tier: "Tier de clasificación",
     tierAyuda:
       "fast responde en una pasada; smart vuelve a preguntar lo dudoso y tarda más.",
@@ -33,6 +34,28 @@ const TEXTOS_ES = {
     titulo: "Panel de salud",
     kpis: ["Índice", "Críticos", "Revisión"],
     pie: "Tendencia, categorías y revisión manual de tus tickets.",
+  },
+  mapeo: {
+    titulo: "Asigna las columnas",
+    intro:
+      "No hemos reconocido todas las columnas obligatorias del archivo. Indica qué columna es cada campo y seguimos. No se envía nada hasta que pulses el botón.",
+    archivo: (nombre: string) => `Archivo: ${nombre}`,
+    campos: {
+      fecha: "Fecha (obligatoria)",
+      asunto: "Asunto (obligatorio)",
+      descripcion: "Descripción (obligatoria)",
+      estado: "Estado (opcional)",
+      prioridad: "Prioridad (opcional)",
+      tiempo_resolucion_horas: "Tiempo de resolución en horas (opcional)",
+    },
+    elegir: "Selecciona una columna",
+    sinAsignar: "Sin asignar",
+    vistaPrevia: "Primeras filas del archivo",
+    ejemplo: (valor: string) => `Ejemplo: ${valor}`,
+    aplicar: "Clasificar con este mapeo",
+    cancelar: "Cancelar",
+    faltanObligatorias:
+      "Selecciona fecha, asunto y descripción para continuar.",
   },
   progreso: {
     preparando: "Preparando los tickets…",
@@ -60,6 +83,7 @@ const TEXTOS_ES = {
     errorColumnas: "El CSV no tiene las columnas necesarias.",
     errorSinFilas: "No hay filas con una fecha válida en el CSV.",
     errorClasificar: "No se pudo clasificar el CSV.",
+    errorExcel: "No se pudo leer el archivo de Excel (.xlsx).",
     filasDescartadas: (cantidad: number) =>
       `${cantidad} fila(s) descartada(s) por fecha no válida.`,
     cancelado: "Proceso cancelado.",
@@ -205,6 +229,8 @@ const TEXTOS_ES = {
     vacio: "El archivo está vacío.",
     faltan: (columnas: string) =>
       `Faltan columnas obligatorias: ${columnas}. Se esperan fecha, asunto y descripcion.`,
+    columnasDetectadas: (columnas: string) =>
+      `Columnas detectadas: ${columnas}. Puedes descargar la plantilla de ejemplo para comparar.`,
     limite: (limite: number) =>
       `El CSV supera el límite de ${limite} filas; se procesan las primeras ${limite}.`,
     fila: (fila: number, mensaje: string) => `Fila ${fila}: ${mensaje}`,
@@ -257,8 +283,9 @@ const TEXTOS_EN: Textos = {
     arrastra: "Drag your ticket CSV here",
     elegir: "Choose file",
     demo: "Load demo data",
+    plantilla: "Download template",
     columnas:
-      "Required columns: fecha, asunto, descripcion. Optional: estado, prioridad, tiempo_resolucion_horas.",
+      "Required columns: fecha, asunto, descripcion. Optional: estado, prioridad, tiempo_resolucion_horas. If they are not detected you can map them by hand. Accepts CSV and Excel (.xlsx).",
     tier: "Classification tier",
     tierAyuda:
       "fast answers in a single pass; smart re-asks the doubtful ones and takes longer.",
@@ -269,6 +296,27 @@ const TEXTOS_EN: Textos = {
     titulo: "Health dashboard",
     kpis: ["Index", "Critical", "Review"],
     pie: "Trend, categories and manual review for your tickets.",
+  },
+  mapeo: {
+    titulo: "Map the columns",
+    intro:
+      "We could not recognise every required column in the file. Tell us which column is which and we continue. Nothing is sent until you press the button.",
+    archivo: (nombre: string) => `File: ${nombre}`,
+    campos: {
+      fecha: "Date (required)",
+      asunto: "Subject (required)",
+      descripcion: "Description (required)",
+      estado: "Status (optional)",
+      prioridad: "Priority (optional)",
+      tiempo_resolucion_horas: "Resolution time in hours (optional)",
+    },
+    elegir: "Select a column",
+    sinAsignar: "Not assigned",
+    vistaPrevia: "First rows of the file",
+    ejemplo: (valor: string) => `Example: ${valor}`,
+    aplicar: "Classify with this mapping",
+    cancelar: "Cancel",
+    faltanObligatorias: "Select date, subject and description to continue.",
   },
   progreso: {
     preparando: "Preparing the tickets…",
@@ -296,6 +344,7 @@ const TEXTOS_EN: Textos = {
     errorColumnas: "The CSV is missing the required columns.",
     errorSinFilas: "There are no rows with a valid date in the CSV.",
     errorClasificar: "The CSV could not be classified.",
+    errorExcel: "The Excel file (.xlsx) could not be read.",
     filasDescartadas: (cantidad: number) =>
       `${cantidad} row(s) dropped for an invalid date.`,
     cancelado: "Process cancelled.",
@@ -441,6 +490,8 @@ const TEXTOS_EN: Textos = {
     vacio: "The file is empty.",
     faltan: (columnas: string) =>
       `Missing required columns: ${columnas}. Expected fecha, asunto and descripcion.`,
+    columnasDetectadas: (columnas: string) =>
+      `Columns found: ${columnas}. You can download the sample template to compare.`,
     limite: (limite: number) =>
       `The CSV exceeds the ${limite}-row limit; processing the first ${limite}.`,
     fila: (fila: number, mensaje: string) => `Row ${fila}: ${mensaje}`,

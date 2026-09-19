@@ -35,6 +35,33 @@ clasificación de [classifier.dev](https://classifier.dev) (sin API key ni cuent
 - **Índice con metodología abierta**: pesos, umbrales y límites están en `/metodologia` y
   en `lib/tickets/indice.ts`, no en un informe corporativo cerrado.
 
+## Compatibilidad del CSV
+
+El parser normaliza encabezados y acepta alias de exportaciones habituales (Zendesk,
+Freshdesk, Jira, Zoho): `Created at`, `Created time`, `Subject`, `Summary`, `Details`,
+`Description`, `Status`, `Priority`, `Resolution time`… Además deduce la fecha por
+encabezados que contengan `fecha`/`created`/`opened` y la descripción por
+`description`/`body`/`details`/`detalle`. Se leen separadores de coma, punto y coma y
+tabulador. Si faltan las tres columnas mínimas, el panel no envía nada a classifier.dev:
+avisa de cuáles faltan y de las columnas que ha detectado, y desde la portada se puede
+descargar una plantilla de ejemplo en el idioma activo.
+
+También se aceptan hojas de Excel (`.xlsx`), convertidas a CSV en el navegador con
+`read-excel-file` mediante import dinámico (no pesa en la carga inicial). Y cuando la
+detección automática no basta, aparece el **mapeo manual de columnas**: una pantalla que
+muestra los encabezados y las primeras filas del archivo para asignar a mano fecha,
+asunto, descripción y los campos opcionales antes de clasificar.
+
+## SEO
+
+- Metadatos por idioma (título con plantilla, descripción, keywords, OpenGraph, Twitter y
+  `theme-color`) con `metadataBase` resuelto desde Vercel sin variables obligatorias.
+- Canónicas y `hreflang` (`es`, `en`, `x-default`) en cada página; `sitemap.xml` con
+  alternates de idioma y `robots.txt`.
+- Imagen OpenGraph 1200×630 generada en build para cada idioma, JSON-LD
+  (`WebApplication`, `BreadcrumbList` y `FAQPage` con las preguntas frecuentes de
+  metodología) y `manifest.webmanifest`.
+
 ## Puesta en marcha
 
 Requisitos: Node.js 20 o superior y npm.
