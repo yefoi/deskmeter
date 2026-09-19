@@ -1,14 +1,15 @@
+import type { Idioma } from "./idioma";
 import type { Granularidad } from "./tipos";
 
-const FORMATO_MES = new Intl.DateTimeFormat("es-ES", {
-  month: "short",
-  year: "numeric",
-});
+const FORMATO_MES: Record<Idioma, Intl.DateTimeFormat> = {
+  es: new Intl.DateTimeFormat("es-ES", { month: "short", year: "numeric" }),
+  en: new Intl.DateTimeFormat("en-GB", { month: "short", year: "numeric" }),
+};
 
-const FORMATO_MES_LARGO = new Intl.DateTimeFormat("es-ES", {
-  month: "long",
-  year: "numeric",
-});
+const FORMATO_MES_LARGO: Record<Idioma, Intl.DateTimeFormat> = {
+  es: new Intl.DateTimeFormat("es-ES", { month: "long", year: "numeric" }),
+  en: new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" }),
+};
 
 function fechaValida(fecha: Date, anio: number, mes: number, dia: number): boolean {
   return (
@@ -84,22 +85,35 @@ export function clavePeriodo(fecha: Date, granularidad: Granularidad): string {
   return granularidad === "semana" ? semanaISO(fecha) : mesISO(fecha);
 }
 
-export function etiquetaPeriodo(periodo: string, granularidad: Granularidad): string {
+export function etiquetaPeriodo(
+  periodo: string,
+  granularidad: Granularidad,
+  idioma: Idioma = "es",
+): string {
   if (granularidad === "semana") {
     const [anio, semana] = periodo.split("-W");
-    return `sem ${Number(semana)} · ${anio}`;
+    const prefijo = idioma === "es" ? "sem" : "wk";
+    return `${prefijo} ${Number(semana)} · ${anio}`;
   }
   const [anio, mes] = periodo.split("-");
-  return FORMATO_MES.format(new Date(Number(anio), Number(mes) - 1, 1));
+  return FORMATO_MES[idioma].format(new Date(Number(anio), Number(mes) - 1, 1));
 }
 
-export function descripcionPeriodo(periodo: string, granularidad: Granularidad): string {
+export function descripcionPeriodo(
+  periodo: string,
+  granularidad: Granularidad,
+  idioma: Idioma = "es",
+): string {
   if (granularidad === "semana") {
     const [anio, semana] = periodo.split("-W");
-    return `Semana ${Number(semana)} de ${anio}`;
+    return idioma === "es"
+      ? `Semana ${Number(semana)} de ${anio}`
+      : `Week ${Number(semana)} of ${anio}`;
   }
   const [anio, mes] = periodo.split("-");
-  return FORMATO_MES_LARGO.format(new Date(Number(anio), Number(mes) - 1, 1));
+  return FORMATO_MES_LARGO[idioma].format(
+    new Date(Number(anio), Number(mes) - 1, 1),
+  );
 }
 
 export function compararPeriodos(a: string, b: string): number {

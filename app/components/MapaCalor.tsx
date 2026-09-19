@@ -1,8 +1,11 @@
+"use client";
+
 import { Fragment } from "react";
 import type { MapaCalor as DatosMapa } from "@/lib/tickets/agregar";
 import { descripcionPeriodo } from "@/lib/tickets/fechas";
 import { nombreCategoria } from "@/lib/tickets/etiquetas";
 import type { Granularidad } from "@/lib/tickets/tipos";
+import { useIdioma } from "./idioma";
 
 interface Props {
   mapa: DatosMapa;
@@ -10,16 +13,17 @@ interface Props {
 }
 
 export default function MapaCalor({ mapa, granularidad }: Props) {
+  const { idioma, t } = useIdioma();
   const { periodos, categorias, conteos, maximo } = mapa;
 
   if (periodos.length === 0) {
-    return <p className="text-sm text-foreground/60">Sin datos que mostrar.</p>;
+    return <p className="text-sm text-foreground/60">{t.mapaCalor.vacio}</p>;
   }
 
   return (
     <div>
       <div className="mb-3 flex items-center justify-end gap-2 text-[10px] text-foreground/50">
-        <span>menos</span>
+        <span>{t.mapaCalor.menos}</span>
         <span
           className="h-2 w-24 rounded-full"
           style={{
@@ -27,7 +31,7 @@ export default function MapaCalor({ mapa, granularidad }: Props) {
               "linear-gradient(90deg, color-mix(in srgb, var(--acento) 12%, transparent), var(--acento))",
           }}
         />
-        <span>más</span>
+        <span>{t.mapaCalor.mas}</span>
       </div>
 
       <div className="overflow-x-auto pb-1">
@@ -43,7 +47,7 @@ export default function MapaCalor({ mapa, granularidad }: Props) {
               <div
                 key={periodo.periodo}
                 className="pb-1 text-center text-[10px] text-foreground/50"
-                title={descripcionPeriodo(periodo.periodo, granularidad)}
+                title={descripcionPeriodo(periodo.periodo, granularidad, idioma)}
               >
                 {periodo.etiqueta}
               </div>
@@ -52,7 +56,7 @@ export default function MapaCalor({ mapa, granularidad }: Props) {
             {categorias.map((categoria, fila) => (
               <Fragment key={categoria}>
                 <div className="sticky left-0 z-10 border-r border-borde/60 bg-panel pr-2 text-right text-xs text-foreground/70">
-                  {nombreCategoria(categoria)}
+                  {nombreCategoria(categoria, idioma)}
                 </div>
                 {periodos.map((periodo, columna) => {
                   const valor = conteos[fila][columna];
@@ -61,7 +65,15 @@ export default function MapaCalor({ mapa, granularidad }: Props) {
                   return (
                     <div
                       key={`${categoria}-${periodo.periodo}`}
-                      title={`${nombreCategoria(categoria)} · ${descripcionPeriodo(periodo.periodo, granularidad)}: ${valor} ticket(s)`}
+                      title={t.mapaCalor.tooltip(
+                        nombreCategoria(categoria, idioma),
+                        descripcionPeriodo(
+                          periodo.periodo,
+                          granularidad,
+                          idioma,
+                        ),
+                        valor,
+                      )}
                       className="flex h-9 items-center justify-center rounded-sm border border-borde/40 text-[11px] tabular-nums transition hover:ring-2 hover:ring-acento/70"
                       style={
                         valor === 0
@@ -83,7 +95,7 @@ export default function MapaCalor({ mapa, granularidad }: Props) {
             ))}
 
             <div className="sticky left-0 z-10 border-r border-borde/60 bg-panel pr-2 text-right text-xs font-medium text-foreground/60">
-              Total
+              {t.mapaCalor.total}
             </div>
             {periodos.map((periodo) => (
               <div

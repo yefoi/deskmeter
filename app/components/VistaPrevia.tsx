@@ -1,3 +1,7 @@
+"use client";
+
+import { useIdioma } from "./idioma";
+
 const SERIE = [58, 63, 60, 69, 66, 74, 78];
 
 const CALOR = [
@@ -13,13 +17,16 @@ const PUNTOS_TENDENCIA = SERIE.map(
 ).join(" ");
 
 export default function VistaPrevia() {
+  const { t } = useIdioma();
+  const valores = ["78,4", "23 %", "14 %"];
+
   return (
     <div className="relative hidden lg:block" aria-hidden="true">
       <div className="absolute -inset-8 rounded-[2rem] bg-acento/10 blur-3xl" />
       <div className="relative rotate-1 rounded-2xl border border-borde bg-panel/90 p-4 shadow-xl shadow-foreground/5 transition-transform duration-500 hover:rotate-0">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium text-foreground/60">
-            Panel de salud
+            {t.vistaPrevia.titulo}
           </p>
           <div className="flex gap-1.5">
             <span className="h-2 w-2 rounded-full bg-peligro/50" />
@@ -29,11 +36,7 @@ export default function VistaPrevia() {
         </div>
 
         <div className="mt-3 grid grid-cols-3 gap-2">
-          {[
-            ["Índice", "78,4"],
-            ["Críticos", "23 %"],
-            ["Revisión", "14 %"],
-          ].map(([titulo, valor]) => (
+          {t.vistaPrevia.kpis.map((titulo, indice) => (
             <div
               key={titulo}
               className="rounded-lg border border-borde bg-background/60 p-2.5"
@@ -42,7 +45,7 @@ export default function VistaPrevia() {
                 {titulo}
               </p>
               <p className="mt-1 text-lg font-semibold tabular-nums">
-                {valor}
+                {valores[indice]}
               </p>
             </div>
           ))}
@@ -90,7 +93,7 @@ export default function VistaPrevia() {
         </div>
 
         <p className="mt-3 text-[10px] text-foreground/50">
-          Tendencia, categorías y revisión manual de tus tickets.
+          {t.vistaPrevia.pie}
         </p>
       </div>
     </div>

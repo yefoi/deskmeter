@@ -1,5 +1,7 @@
 import { nombreCategoria, nombreUrgencia } from "./etiquetas";
 import { formatearFechaIso } from "./formato";
+import type { Idioma } from "./idioma";
+import { textosDe } from "./textos";
 import type { Categoria, Ticket, Urgencia } from "./tipos";
 
 export type FiltroRevision =
@@ -8,14 +10,6 @@ export type FiltroRevision =
   | "urgencia"
   | "baja"
   | "sin_score";
-
-export const FILTROS_REVISION: { id: FiltroRevision; etiqueta: string }[] = [
-  { id: "todas", etiqueta: "Todas" },
-  { id: "categoria", etiqueta: "Categoría dudosa" },
-  { id: "urgencia", etiqueta: "Urgencia dudosa" },
-  { id: "baja", etiqueta: "Confianza < 50 %" },
-  { id: "sin_score", etiqueta: "Sin score" },
-];
 
 export function categoriaDeTicket(ticket: Ticket): Categoria {
   return (ticket.categoria.valida
@@ -79,36 +73,29 @@ export function escaparCampoCsv(valor: string | number): string {
   return texto;
 }
 
-const CABECERA_REVISION = [
-  "fecha",
-  "asunto",
-  "texto_redactado",
-  "categoria",
-  "confianza_categoria",
-  "urgencia",
-  "confianza_urgencia",
-  "motivos_revision",
-];
-
 function confianzaCsv(confianza: number | null): string {
   return confianza === null ? "" : confianza.toFixed(2);
 }
 
-export function exportarRevisionCsv(tickets: Ticket[]): string {
+export function exportarRevisionCsv(
+  tickets: Ticket[],
+  idioma: Idioma = "es",
+): string {
+  const cabecera = textosDe(idioma).revisionCsv.cabecera;
   const filas = tickets.map((ticket) => [
     formatearFechaIso(ticket.fecha),
     ticket.asunto,
     ticket.textoRedactado,
-    nombreCategoria(categoriaDeTicket(ticket)),
+    nombreCategoria(categoriaDeTicket(ticket), idioma),
     confianzaCsv(ticket.categoria.confianza),
-    nombreUrgencia(urgenciaDeTicket(ticket)),
+    nombreUrgencia(urgenciaDeTicket(ticket), idioma),
     confianzaCsv(ticket.urgencia.confianza),
     ticket.motivosRevision.join("+"),
   ]);
 
   return (
     "\uFEFF" +
-    [CABECERA_REVISION, ...filas]
+    [[...cabecera], ...filas]
       .map((fila) => fila.map(escaparCampoCsv).join(";"))
       .join("\r\n")
   );

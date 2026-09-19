@@ -35,4 +35,14 @@ describe("generarTicketsDemo", () => {
       tickets.some((ticket) => ticket.textoRedactado.includes("[EMAIL]")),
     ).toBe(true);
   });
+
+  it("genera la demo en inglés con etiquetas válidas", () => {
+    const tickets = generarTicketsDemo(60, new Date(2026, 8, 18), "en");
+    expect(
+      tickets.every((ticket) => ticket.categoria.valida && ticket.urgencia.valida),
+    ).toBe(true);
+    expect(
+      tickets.some((ticket) => ticket.textoRedactado.includes("[PHONE]")),
+    ).toBe(true);
+  });
 });

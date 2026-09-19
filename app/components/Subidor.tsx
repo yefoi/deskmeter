@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { Tier } from "@/lib/tickets/tipos";
+import { useIdioma } from "./idioma";
 import VistaPrevia from "./VistaPrevia";
 
 interface Props {
@@ -19,6 +20,7 @@ export default function Subidor({
   tier,
   onTier,
 }: Props) {
+  const { t } = useIdioma();
   const [arrastrando, setArrastrando] = useState(false);
   const entrada = useRef<HTMLInputElement>(null);
 
@@ -38,18 +40,11 @@ export default function Subidor({
             Deskmeter
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-foreground/70">
-            Sube el CSV exportado de tu helpdesk y obtén un panel de salud:
-            tendencia del índice, categorías, urgencia y los tickets que conviene
-            revisar a mano. Si solo quieres verlo funcionar, carga los datos
-            demo.
+            {t.subidor.intro}
           </p>
 
           <ul className="mt-4 flex flex-wrap gap-2 text-xs">
-            {[
-              "Sin registro",
-              "Datos en tu navegador",
-              "Metodología abierta",
-            ].map((sello) => (
+            {t.subidor.sellos.map((sello) => (
               <li
                 key={sello}
                 className="inline-flex items-center gap-1.5 rounded-full border border-borde bg-background/60 px-2.5 py-1 text-foreground/70"
@@ -75,9 +70,7 @@ export default function Subidor({
               arrastrando ? "border-acento bg-acento-suave/50" : "border-borde"
             }`}
           >
-            <p className="text-sm text-foreground/70">
-              Arrastra aquí el CSV de tickets
-            </p>
+            <p className="text-sm text-foreground/70">{t.subidor.arrastra}</p>
             <div className="flex flex-wrap justify-center gap-2">
               <button
                 type="button"
@@ -85,7 +78,7 @@ export default function Subidor({
                 onClick={() => entrada.current?.click()}
                 className="rounded-lg bg-acento px-4 py-2 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-50"
               >
-                Elegir archivo
+                {t.subidor.elegir}
               </button>
               <button
                 type="button"
@@ -93,7 +86,7 @@ export default function Subidor({
                 onClick={onDemo}
                 className="rounded-lg border border-borde px-4 py-2 text-sm transition hover:bg-panel-suave disabled:opacity-50"
               >
-                Cargar datos demo
+                {t.subidor.demo}
               </button>
             </div>
             <input
@@ -103,14 +96,11 @@ export default function Subidor({
               className="hidden"
               onChange={(evento) => elegirArchivo(evento.target.files?.[0])}
             />
-            <p className="text-xs text-foreground/50">
-              Columnas mínimas: fecha, asunto, descripcion. Opcionales: estado,
-              prioridad, tiempo_resolucion_horas.
-            </p>
+            <p className="text-xs text-foreground/50">{t.subidor.columnas}</p>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-3 text-xs">
-            <span className="text-foreground/60">Tier de clasificación</span>
+            <span className="text-foreground/60">{t.subidor.tier}</span>
             <div className="flex rounded-lg border border-borde p-0.5">
               {(["fast", "smart"] as const).map((opcion) => (
                 <button
@@ -128,16 +118,11 @@ export default function Subidor({
                 </button>
               ))}
             </div>
-            <span className="text-foreground/50">
-              fast responde en una pasada; smart vuelve a preguntar lo dudoso y
-              tarda más.
-            </span>
+            <span className="text-foreground/50">{t.subidor.tierAyuda}</span>
           </div>
 
           <p className="mt-4 text-xs leading-relaxed text-foreground/60">
-            El CSV se procesa en tu navegador. Solo sale hacia classifier.dev el
-            texto redactado de cada ticket (correos, teléfonos y DNI/NIE
-            sustituidos antes de enviar). Nada se guarda en el servidor.
+            {t.subidor.privacidad}
           </p>
         </div>
 

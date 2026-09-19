@@ -2,6 +2,7 @@
 
 import { formatearNumero } from "@/lib/tickets/formato";
 import { PALETA_SEMAFORO, type Tema } from "./colores";
+import { useIdioma } from "./idioma";
 import { useNumeroAnimado } from "./useNumeroAnimado";
 
 interface Props {
@@ -36,11 +37,21 @@ function banda(valor: number): "baja" | "media" | "alta" {
 }
 
 export default function IndiceGauge({ valor, tema, serie = [] }: Props) {
+  const { idioma, t } = useIdioma();
   const animado = useNumeroAnimado(valor);
   const mostrado = animado ?? 0;
   const rotacion = 1.8 * mostrado;
   const semaforo = PALETA_SEMAFORO[tema];
   const color = valor === null ? "var(--borde)" : semaforo[banda(valor)];
+
+  const etiqueta =
+    valor === null
+      ? t.gauge.sinDatos
+      : valor < 40
+        ? t.gauge.baja
+        : valor < 70
+          ? t.gauge.media
+          : t.gauge.alta;
 
   return (
     <div>
@@ -95,18 +106,12 @@ export default function IndiceGauge({ valor, tema, serie = [] }: Props) {
           fill="var(--foreground)"
           style={{ fontVariantNumeric: "tabular-nums" }}
         >
-          {valor === null ? "—" : formatearNumero(mostrado)}
+          {valor === null ? "—" : formatearNumero(mostrado, idioma)}
         </text>
       </svg>
 
       <p className="text-center text-xs" style={{ color }}>
-        {valor === null
-          ? "sin datos"
-          : valor < 40
-            ? "salud baja"
-            : valor < 70
-              ? "salud media"
-              : "salud buena"}
+        {etiqueta}
       </p>
 
       {serie.length > 1 && (

@@ -1,4 +1,6 @@
 import Papa from "papaparse";
+import type { Idioma } from "./idioma";
+import { TEXTOS_CSV } from "./textos";
 import type { TicketCrudo } from "./tipos";
 import { parsearFecha } from "./fechas";
 
@@ -102,7 +104,12 @@ function numeroDeHoras(valor: string): number | undefined {
   return numero;
 }
 
-export function parsearCsv(texto: string, limiteFilas = LIMITE_FILAS): ResultadoParseoCsv {
+export function parsearCsv(
+  texto: string,
+  limiteFilas = LIMITE_FILAS,
+  idioma: Idioma = "es",
+): ResultadoParseoCsv {
+  const mensajes = TEXTOS_CSV[idioma];
   const base: ResultadoParseoCsv = {
     tickets: [],
     columnasPresentes: [],
@@ -113,7 +120,7 @@ export function parsearCsv(texto: string, limiteFilas = LIMITE_FILAS): Resultado
   };
 
   if (!texto.trim()) {
-    return { ...base, errores: ["El archivo está vacío."] };
+    return { ...base, errores: [mensajes.vacio] };
   }
 
   const resultado = Papa.parse<Record<string, string>>(texto, {
@@ -132,9 +139,7 @@ export function parsearCsv(texto: string, limiteFilas = LIMITE_FILAS): Resultado
       ...base,
       columnasPresentes: presentes,
       columnasFaltantes: faltantes,
-      errores: [
-        `Faltan columnas obligatorias: ${faltantes.join(", ")}. Se esperan fecha, asunto y descripcion.`,
-      ],
+      errores: [mensajes.faltan(faltantes.join(", "))],
     };
   }
 
@@ -144,9 +149,7 @@ export function parsearCsv(texto: string, limiteFilas = LIMITE_FILAS): Resultado
 
   for (let indice = 0; indice < resultado.data.length; indice++) {
     if (tickets.length >= limiteFilas) {
-      base.errores.push(
-        `El CSV supera el límite de ${limiteFilas} filas; se procesan las primeras ${limiteFilas}.`,
-      );
+      base.errores.push(mensajes.limite(limiteFilas));
       break;
     }
 
@@ -161,7 +164,9 @@ export function parsearCsv(texto: string, limiteFilas = LIMITE_FILAS): Resultado
       if (filasInvalidas.length < 20) {
         filasInvalidas.push({
           fila: numeroFila,
-          motivo: `Fecha no válida: "${valorDe(fila, columnas.get("fecha")) || "vacía"}"`,
+          motivo: mensajes.fechaInvalida(
+            valorDe(fila, columnas.get("fecha")),
+          ),
         });
       }
       continue;
@@ -183,7 +188,7 @@ export function parsearCsv(texto: string, limiteFilas = LIMITE_FILAS): Resultado
   for (const error of resultado.errors.slice(0, 5)) {
     base.errores.push(
       error.row !== undefined
-        ? `Fila ${error.row + 2}: ${error.message}`
+        ? mensajes.fila(error.row + 2, error.message)
         : error.message,
     );
   }

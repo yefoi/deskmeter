@@ -1,6 +1,6 @@
 "use client";
 
-export default function TemaToggle() {
+export default function TemaToggle({ aria }: { aria: string }) {
   const alternar = () => {
     const oscuro = document.documentElement.classList.toggle("dark");
     try {
@@ -14,7 +14,7 @@ export default function TemaToggle() {
     <button
       type="button"
       onClick={alternar}
-      aria-label="Cambiar entre tema claro y oscuro"
+      aria-label={aria}
       className="rounded-md p-2 text-foreground/70 transition hover:bg-panel-suave hover:text-foreground"
     >
       <svg

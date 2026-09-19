@@ -1,58 +1,31 @@
 import Link from "next/link";
+import { useIdioma } from "./idioma";
 
-const DIFERENCIAS = [
-  {
-    titulo: "Instantáneo y público",
-    texto:
-      "Abres la URL, subes el CSV y el panel está listo en segundos. Sin demo de ventas, sin formulario de contacto y sin esperar 24-48 horas.",
-    icono: "rayo",
-  },
-  {
-    titulo: "Sin backend ni retención",
-    texto:
-      "El CSV se procesa en tu navegador y no se persiste nada: recargas y desaparece. Algunos paneles conservan tu export hasta 30 días.",
-    icono: "escudo",
-  },
-  {
-    titulo: "Metodología abierta",
-    texto:
-      "El índice de salud publica sus pesos, umbrales y límites en /metodologia, con el código que lo calcula versionado. No es un informe cerrado.",
-    icono: "codigo",
-  },
-] as const;
-
-const COMPARATIVA = [
-  ["Primer dato", "Segundos", "Demo comercial o 24-48 h"],
-  ["Acceso", "URL pública, sin registro", "Formulario de contacto"],
-  ["Procesado del CSV", "En tu navegador", "Se sube a su nube"],
-  ["Retención", "Ninguna", "Hasta 30 días (según proveedor)"],
-  ["Índice de salud", "Fórmula abierta y versionada", "Informe cerrado"],
-  ["Para empezar", "Abrir la URL", "Agendar una llamada"],
-] as const;
+const ICONOS = ["rayo", "escudo", "codigo"] as const;
 
 export default function PorQue() {
+  const { t } = useIdioma();
+
   return (
     <section className="rounded-2xl border border-borde bg-panel p-6 sm:p-8">
       <p className="text-xs font-medium uppercase tracking-wide text-acento">
-        La diferencia está en la forma
+        {t.porQue.kicker}
       </p>
       <h2 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
-        Por qué Deskmeter
+        {t.porQue.titulo}
       </h2>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-foreground/70">
-        El mismo objetivo que un panel de helpdesk al uso, sin el camino
-        corporativo: ni registro, ni llamada, ni una copia de tus tickets en
-        otro servidor.
+        {t.porQue.intro}
       </p>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        {DIFERENCIAS.map((diferencia) => (
+        {t.porQue.diferencias.map((diferencia, indice) => (
           <div
             key={diferencia.titulo}
             className="rounded-xl border border-borde bg-background/50 p-4 transition hover:-translate-y-0.5 hover:border-acento/40"
           >
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-acento-suave/60 text-acento">
-              <Icono tipo={diferencia.icono} />
+              <Icono tipo={ICONOS[indice]} />
             </span>
             <h3 className="mt-3 text-sm font-semibold">{diferencia.titulo}</h3>
             <p className="mt-1 text-xs leading-relaxed text-foreground/70">
@@ -68,15 +41,15 @@ export default function PorQue() {
             <tr className="border-b border-borde text-xs uppercase tracking-wide">
               <th className="w-[22%] py-2 pr-3 font-medium text-foreground/40" />
               <th className="w-[39%] py-2 pr-3 font-semibold text-acento">
-                Deskmeter
+                {t.porQue.comparativaTitulo}
               </th>
               <th className="w-[39%] py-2 pr-3 font-medium text-foreground/40">
-                Panel corporativo típico
+                {t.porQue.comparativaOtras}
               </th>
             </tr>
           </thead>
           <tbody>
-            {COMPARATIVA.map(([criterio, deskmeter, tipico]) => (
+            {t.porQue.comparativa.map(([criterio, deskmeter, tipico]) => (
               <tr
                 key={criterio}
                 className="border-b border-borde/60 align-top"
@@ -103,13 +76,12 @@ export default function PorQue() {
       </div>
 
       <p className="mt-3 text-xs text-foreground/45">
-        Comparación con el camino típico de un panel corporativo de helpdesk;
-        los detalles varían según proveedor.{" "}
+        {t.porQue.nota}{" "}
         <Link
-          href="/metodologia"
+          href={t.porQue.enlaceMetodologia}
           className="underline underline-offset-2 hover:text-foreground"
         >
-          Ver la metodología abierta
+          {t.porQue.enlace}
         </Link>
         .
       </p>
@@ -117,7 +89,7 @@ export default function PorQue() {
   );
 }
 
-function Icono({ tipo }: { tipo: "rayo" | "escudo" | "codigo" | "check" | "guion" }) {
+function Icono({ tipo }: { tipo: (typeof ICONOS)[number] | "check" | "guion" }) {
   if (tipo === "check") {
     return (
       <svg

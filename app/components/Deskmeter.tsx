@@ -2,16 +2,18 @@
 
 import { useCallback, useRef, useState } from "react";
 import { clasificarTickets } from "@/lib/tickets/clasificar";
-import { parsearCsv } from "@/lib/tickets/csv";
+import { LIMITE_FILAS, parsearCsv } from "@/lib/tickets/csv";
 import { generarTicketsDemo } from "@/lib/tickets/demo";
 import type { Ticket, Tier } from "@/lib/tickets/tipos";
 import EsqueletoPanel from "./EsqueletoPanel";
+import { useIdioma } from "./idioma";
 import PanelResultados from "./PanelResultados";
 import PorQue from "./PorQue";
 import Progreso, { type EstadoProgreso } from "./Progreso";
 import Subidor from "./Subidor";
 
 export default function Deskmeter() {
+  const { idioma, t } = useIdioma();
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
   const [fuente, setFuente] = useState<"demo" | "csv" | null>(null);
   const [nombreArchivo, setNombreArchivo] = useState<string | null>(null);
@@ -23,13 +25,13 @@ export default function Deskmeter() {
 
   const cargarDemo = useCallback(() => {
     controlador.current?.abort();
-    setTickets(generarTicketsDemo());
+    setTickets(generarTicketsDemo(180, new Date(), idioma));
     setFuente("demo");
     setNombreArchivo(null);
     setProgreso(null);
     setError(null);
     setAviso(null);
-  }, []);
+  }, [idioma]);
 
   const procesarArchivo = useCallback(
     async (archivo: File) => {
@@ -45,25 +47,23 @@ export default function Deskmeter() {
       try {
         texto = await archivo.text();
       } catch {
-        setError("No se pudo leer el archivo.");
+        setError(t.deskmeter.errorLectura);
         return;
       }
 
-      const resultado = parsearCsv(texto);
+      const resultado = parsearCsv(texto, LIMITE_FILAS, idioma);
       if (resultado.columnasFaltantes.length > 0) {
-        setError(resultado.errores[0] ?? "El CSV no tiene las columnas necesarias.");
+        setError(resultado.errores[0] ?? t.deskmeter.errorColumnas);
         return;
       }
       if (resultado.tickets.length === 0) {
-        setError("No hay filas con una fecha válida en el CSV.");
+        setError(t.deskmeter.errorSinFilas);
         return;
       }
 
       const avisos: string[] = [];
       if (resultado.filasDescartadas > 0) {
-        avisos.push(
-          `${resultado.filasDescartadas} fila(s) descartada(s) por fecha no válida.`,
-        );
+        avisos.push(t.deskmeter.filasDescartadas(resultado.filasDescartadas));
       }
       avisos.push(...resultado.errores);
       setAviso(avisos.join(" ") || null);
@@ -81,6 +81,7 @@ export default function Deskmeter() {
       try {
         const clasificados = await clasificarTickets(resultado.tickets, {
           tier,
+          idioma,
           signal: control.signal,
           alProgreso: (hechos, total, fase) =>
             setProgreso({ hechos, total, fase }),
@@ -88,12 +89,10 @@ export default function Deskmeter() {
         setTickets(clasificados);
       } catch (fallo) {
         if (fallo instanceof DOMException && fallo.name === "AbortError") {
-          setAviso("Proceso cancelado.");
+          setAviso(t.deskmeter.cancelado);
         } else {
           setError(
-            fallo instanceof Error
-              ? fallo.message
-              : "No se pudo clasificar el CSV.",
+            fallo instanceof Error ? fallo.message : t.deskmeter.errorClasificar,
           );
         }
       } finally {
@@ -101,7 +100,7 @@ export default function Deskmeter() {
         controlador.current = null;
       }
     },
-    [tier],
+    [idioma, t, tier],
   );
 
   const cancelar = () => controlador.current?.abort();
@@ -159,27 +158,11 @@ export default function Deskmeter() {
 }
 
 function ComoFunciona() {
-  const pasos = [
-    {
-      titulo: "1 · Sube el CSV",
-      texto:
-        "Se esperan las columnas fecha, asunto y descripcion. Si además trae estado, prioridad y tiempo_resolucion_horas, se aprovechan en el panel.",
-    },
-    {
-      titulo: "2 · Se redacta y se clasifica",
-      texto:
-        "Antes de enviar nada se quitan correos, teléfonos y DNI/NIE. Cada ticket se clasifica en dos pasadas con classifier.dev: categoría y urgencia.",
-    },
-    {
-      titulo: "3 · Lee el panel",
-      texto:
-        "Índice de salud por semana y por mes, mapa de calor de categorías, histograma y la lista de tickets con confianza baja para revisar a mano.",
-    },
-  ];
+  const { t } = useIdioma();
 
   return (
     <section className="grid gap-3 sm:grid-cols-3">
-      {pasos.map((paso) => (
+      {t.deskmeter.pasos.map((paso) => (
         <div
           key={paso.titulo}
           className="rounded-xl border border-borde bg-panel p-4"

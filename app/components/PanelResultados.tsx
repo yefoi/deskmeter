@@ -10,6 +10,7 @@ import { descripcionPeriodo } from "@/lib/tickets/fechas";
 import { indicesPorPeriodo } from "@/lib/tickets/indice";
 import type { Granularidad, Ticket } from "@/lib/tickets/tipos";
 import Histograma from "./Histograma";
+import { useIdioma } from "./idioma";
 import MapaCalor from "./MapaCalor";
 import TablaRevision from "./TablaRevision";
 import Tarjetas from "./Tarjetas";
@@ -30,16 +31,17 @@ export default function PanelResultados({
   aviso,
   onReiniciar,
 }: Props) {
+  const { idioma, t } = useIdioma();
   const [granularidad, setGranularidad] = useState<Granularidad>("semana");
 
   const agregados = useMemo(
-    () => agruparPorPeriodo(tickets, granularidad),
-    [tickets, granularidad],
+    () => agruparPorPeriodo(tickets, granularidad, idioma),
+    [tickets, granularidad, idioma],
   );
   const indices = useMemo(() => indicesPorPeriodo(agregados), [agregados]);
   const calor = useMemo(
-    () => mapaCalorCategorias(tickets, granularidad),
-    [tickets, granularidad],
+    () => mapaCalorCategorias(tickets, granularidad, idioma),
+    [tickets, granularidad, idioma],
   );
   const resumen = useMemo(() => calcularResumen(tickets), [tickets]);
   const revision = useMemo(
@@ -57,27 +59,28 @@ export default function PanelResultados({
 
   const datosTendencia = agregados.map((agregado) => ({
     etiqueta: agregado.etiqueta,
-    descripcion: descripcionPeriodo(agregado.periodo, granularidad),
+    descripcion: descripcionPeriodo(agregado.periodo, granularidad, idioma),
     valor: indices.get(agregado.periodo)?.valor ?? 0,
   }));
   const datosHistograma = agregados.map((agregado) => ({
     etiqueta: agregado.etiqueta,
-    descripcion: descripcionPeriodo(agregado.periodo, granularidad),
+    descripcion: descripcionPeriodo(agregado.periodo, granularidad, idioma),
     ...agregado.porCategoria,
   }));
 
-  const nombrePeriodo = granularidad === "semana" ? "semana" : "mes";
+  const nombrePeriodo =
+    granularidad === "semana" ? t.panel.semana : t.panel.mes;
   const descripcionFuente =
     fuente === "demo"
-      ? "Datos demo generados en local con clasificación simulada."
-      : `Fuente: ${nombreArchivo ?? "CSV"} · ${tickets.length} tickets clasificados con classifier.dev.`;
+      ? t.panel.fuenteDemo
+      : t.panel.fuenteCsv(nombreArchivo ?? "CSV", tickets.length);
 
   return (
     <div className="aparecer flex flex-col gap-6 pb-20 sm:pb-0">
       <section className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
-            Panel de salud
+            {t.panel.titulo}
           </h1>
           <p className="mt-1 text-sm text-foreground/60">{descripcionFuente}</p>
         </div>
@@ -85,13 +88,14 @@ export default function PanelResultados({
           <SelectorGranularidad
             granularidad={granularidad}
             onCambio={setGranularidad}
+            etiquetas={[t.panel.semana, t.panel.mes]}
           />
           <button
             type="button"
             onClick={onReiniciar}
             className="rounded-lg border border-borde px-3 py-2 text-sm transition hover:bg-panel-suave"
           >
-            Procesar otro CSV
+            {t.panel.procesarOtro}
           </button>
         </div>
       </section>
@@ -113,47 +117,42 @@ export default function PanelResultados({
       />
 
       <section className="panel-imprimible rounded-xl border border-borde bg-panel p-4 sm:p-5">
-        <h2 className="text-base font-semibold">
-          Tendencia del índice de salud
-        </h2>
+        <h2 className="text-base font-semibold">{t.panel.tendenciaTitulo}</h2>
         <p className="mb-4 text-xs text-foreground/60">
-          0 = peor salud, 100 = mejor. Cada punto es un
-          {nombrePeriodo === "mes" ? "" : "a"} {nombrePeriodo}.
+          {t.panel.tendenciaDetalle(nombrePeriodo)}
         </p>
         <Tendencia datos={datosTendencia} />
       </section>
 
       <section className="panel-imprimible rounded-xl border border-borde bg-panel p-4 sm:p-5">
         <h2 className="text-base font-semibold">
-          Mapa de calor: categoría × {nombrePeriodo}
+          {t.panel.calorTitulo(nombrePeriodo)}
         </h2>
         <p className="mb-4 text-xs text-foreground/60">
-          Tickets de cada categoría en cada {nombrePeriodo}. Cuanto más oscuro,
-          más volumen.
+          {t.panel.calorDetalle(nombrePeriodo)}
         </p>
         <MapaCalor mapa={calor} granularidad={granularidad} />
       </section>
 
       <section className="panel-imprimible rounded-xl border border-borde bg-panel p-4 sm:p-5">
         <h2 className="text-base font-semibold">
-          Histograma de tickets por categoría
+          {t.panel.histogramaTitulo}
         </h2>
         <p className="mb-4 text-xs text-foreground/60">
-          Recuento por {nombrePeriodo}, apilado por categoría.
+          {t.panel.histogramaDetalle(nombrePeriodo)}
         </p>
         <Histograma datos={datosHistograma} />
       </section>
 
       <section className="panel-imprimible rounded-xl border border-borde bg-panel p-4 sm:p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-base font-semibold">Revisión manual</h2>
+          <h2 className="text-base font-semibold">{t.panel.revisionTitulo}</h2>
           <p className="text-xs text-foreground/60">
-            {revision.length} de {tickets.length} tickets con confianza menor
-            que 0,7 (o sin score) en alguna dimensión.
+            {t.panel.revisionContador(revision.length, tickets.length)}
           </p>
         </div>
         <p className="mb-4 text-xs text-foreground/60">
-          Textos ya redactados: sin correos, teléfonos ni DNI/NIE.
+          {t.panel.revisionDetalle}
         </p>
         <TablaRevision tickets={revision} />
       </section>
@@ -164,7 +163,7 @@ export default function PanelResultados({
           onClick={onReiniciar}
           className="w-full rounded-lg bg-acento px-4 py-2.5 text-sm font-medium text-background"
         >
-          Procesar otro CSV
+          {t.panel.procesarOtro}
         </button>
       </div>
     </div>
@@ -174,24 +173,26 @@ export default function PanelResultados({
 function SelectorGranularidad({
   granularidad,
   onCambio,
+  etiquetas,
 }: {
   granularidad: Granularidad;
   onCambio: (granularidad: Granularidad) => void;
+  etiquetas: [string, string];
 }) {
   return (
     <div className="flex rounded-lg border border-borde p-0.5 text-sm">
-      {(["semana", "mes"] as const).map((opcion) => (
+      {(["semana", "mes"] as const).map((opcion, indice) => (
         <button
           key={opcion}
           type="button"
           onClick={() => onCambio(opcion)}
-          className={`rounded-md px-3 py-1.5 capitalize transition ${
+          className={`rounded-md px-3 py-1.5 transition ${
             granularidad === opcion
               ? "bg-acento text-background"
               : "text-foreground/70 hover:bg-panel-suave"
           }`}
         >
-          {opcion}
+          {etiquetas[indice]}
         </button>
       ))}
     </div>

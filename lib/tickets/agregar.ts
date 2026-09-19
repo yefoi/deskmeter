@@ -1,5 +1,6 @@
 import { CATEGORIAS } from "./etiquetas";
 import { clavePeriodo, compararPeriodos, etiquetaPeriodo } from "./fechas";
+import type { Idioma } from "./idioma";
 import type {
   Categoria,
   Granularidad,
@@ -19,9 +20,7 @@ export interface MapaCalor {
   maximo: number;
 }
 
-export const CATEGORIAS_ORDEN: Categoria[] = CATEGORIAS.map(
-  (categoria) => categoria.valor,
-);
+export const CATEGORIAS_ORDEN: Categoria[] = [...CATEGORIAS];
 
 function redondear(valor: number, decimales = 1): number {
   const factor = 10 ** decimales;
@@ -87,6 +86,7 @@ export function calcularResumen(tickets: Ticket[]): ResumenTickets {
 export function agruparPorPeriodo(
   tickets: Ticket[],
   granularidad: Granularidad,
+  idioma: Idioma = "es",
 ): AgregadoPeriodo[] {
   const grupos = new Map<string, Ticket[]>();
   for (const ticket of tickets) {
@@ -103,7 +103,7 @@ export function agruparPorPeriodo(
     .sort(([a], [b]) => compararPeriodos(a, b))
     .map(([periodo, ticketsPeriodo]) => ({
       periodo,
-      etiqueta: etiquetaPeriodo(periodo, granularidad),
+      etiqueta: etiquetaPeriodo(periodo, granularidad, idioma),
       ...calcularResumen(ticketsPeriodo),
     }));
 }
@@ -111,8 +111,9 @@ export function agruparPorPeriodo(
 export function mapaCalorCategorias(
   tickets: Ticket[],
   granularidad: Granularidad,
+  idioma: Idioma = "es",
 ): MapaCalor {
-  const agregados = agruparPorPeriodo(tickets, granularidad);
+  const agregados = agruparPorPeriodo(tickets, granularidad, idioma);
   const conteos = CATEGORIAS_ORDEN.map(() => agregados.map(() => 0));
   let maximo = 0;
 

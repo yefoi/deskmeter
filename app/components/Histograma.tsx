@@ -10,9 +10,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CATEGORIAS } from "@/lib/tickets/etiquetas";
+import { CATEGORIAS, nombreCategoria } from "@/lib/tickets/etiquetas";
 import type { Categoria } from "@/lib/tickets/tipos";
 import { PALETA_CATEGORIAS } from "./colores";
+import { useIdioma } from "./idioma";
 import { useTema } from "./useTema";
 
 interface Punto extends Record<string, string | number> {
@@ -29,6 +30,7 @@ const ESTILO_TOOLTIP = {
 } as const;
 
 export default function Histograma({ datos }: { datos: Punto[] }) {
+  const { idioma } = useIdioma();
   const tema = useTema();
   const [ocultas, setOcultas] = useState<Categoria[]>([]);
 
@@ -44,13 +46,14 @@ export default function Histograma({ datos }: { datos: Punto[] }) {
     <div>
       <div className="no-imprimir mb-3 flex flex-wrap gap-1.5">
         {CATEGORIAS.map((categoria) => {
-          const oculta = ocultas.includes(categoria.valor);
+          const oculta = ocultas.includes(categoria);
+          const nombre = nombreCategoria(categoria, idioma);
           return (
             <button
-              key={categoria.valor}
+              key={categoria}
               type="button"
               aria-pressed={!oculta}
-              onClick={() => alternar(categoria.valor)}
+              onClick={() => alternar(categoria)}
               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition ${
                 oculta
                   ? "border-borde text-foreground/40 line-through"
@@ -62,10 +65,10 @@ export default function Histograma({ datos }: { datos: Punto[] }) {
                 style={{
                   backgroundColor: oculta
                     ? "var(--borde)"
-                    : PALETA_CATEGORIAS[tema][categoria.valor],
+                    : PALETA_CATEGORIAS[tema][categoria],
                 }}
               />
-              {categoria.prompt}
+              {nombre}
             </button>
           );
         })}
@@ -106,13 +109,13 @@ export default function Histograma({ datos }: { datos: Punto[] }) {
             />
             {CATEGORIAS.map((categoria) => (
               <Bar
-                key={categoria.valor}
-                dataKey={categoria.valor}
-                name={categoria.prompt}
+                key={categoria}
+                dataKey={categoria}
+                name={nombreCategoria(categoria, idioma)}
                 stackId="categorias"
-                fill={PALETA_CATEGORIAS[tema][categoria.valor]}
+                fill={PALETA_CATEGORIAS[tema][categoria]}
                 maxBarSize={38}
-                hide={ocultas.includes(categoria.valor)}
+                hide={ocultas.includes(categoria)}
               />
             ))}
           </BarChart>

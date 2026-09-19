@@ -7,21 +7,19 @@ import { redactar } from "@/lib/tickets/pii";
 import {
   categoriaDeTicket,
   exportarRevisionCsv,
-  FILTROS_REVISION,
   filtrarRevision,
   type FiltroRevision,
   urgenciaDeTicket,
 } from "@/lib/tickets/revision";
 import type { Ticket } from "@/lib/tickets/tipos";
 import { colorCategoria, colorUrgencia } from "./colores";
+import { useIdioma } from "./idioma";
 import { useTema } from "./useTema";
 
 interface Props {
   tickets: Ticket[];
   limite?: number;
 }
-
-const MOTIVO = { categoria: "categoría", urgencia: "urgencia" } as const;
 
 function tinteFila(ticket: Ticket): string {
   const confianzas = [ticket.categoria.confianza, ticket.urgencia.confianza];
@@ -31,6 +29,7 @@ function tinteFila(ticket: Ticket): string {
 }
 
 export default function TablaRevision({ tickets, limite = 80 }: Props) {
+  const { idioma, t } = useIdioma();
   const tema = useTema();
   const [filtro, setFiltro] = useState<FiltroRevision>("todas");
   const [busqueda, setBusqueda] = useState("");
@@ -42,7 +41,7 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
   const visibles = filtrados.slice(0, limite);
 
   const descargar = () => {
-    const blob = new Blob([exportarRevisionCsv(filtrados)], {
+    const blob = new Blob([exportarRevisionCsv(filtrados, idioma)], {
       type: "text/csv;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
@@ -57,9 +56,7 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
 
   if (tickets.length === 0) {
     return (
-      <p className="text-sm text-foreground/60">
-        Ningún ticket necesita revisión manual.
-      </p>
+      <p className="text-sm text-foreground/60">{t.revision.ninguna}</p>
     );
   }
 
@@ -67,7 +64,7 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
     <div>
       <div className="no-imprimir mb-4 flex flex-wrap items-center gap-2">
         <div className="flex flex-wrap gap-1.5">
-          {FILTROS_REVISION.map((opcion) => (
+          {t.revision.filtros.map((opcion) => (
             <button
               key={opcion.id}
               type="button"
@@ -87,7 +84,7 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
             type="search"
             value={busqueda}
             onChange={(evento) => setBusqueda(evento.target.value)}
-            placeholder="Buscar en los tickets…"
+            placeholder={t.revision.buscar}
             className="w-44 rounded-lg border border-borde bg-background px-3 py-1.5 text-xs outline-none transition focus:border-acento sm:w-56"
           />
           <button
@@ -95,25 +92,24 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
             onClick={descargar}
             className="rounded-lg border border-borde px-3 py-1.5 text-xs transition hover:bg-panel-suave"
           >
-            Exportar CSV
+            {t.revision.exportar}
           </button>
         </div>
       </div>
 
       <p className="mb-3 text-xs text-foreground/50">
-        {filtrados.length} de {tickets.length} tickets con los filtros
-        actuales.
+        {t.revision.contador(filtrados.length, tickets.length)}
       </p>
 
       <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[760px] border-collapse text-left text-sm">
           <thead>
             <tr className="border-b border-borde text-xs uppercase tracking-wide text-foreground/50">
-              <th className="py-2 pr-3 font-medium">Fecha</th>
-              <th className="py-2 pr-3 font-medium">Ticket</th>
-              <th className="py-2 pr-3 font-medium">Categoría</th>
-              <th className="py-2 pr-3 font-medium">Urgencia</th>
-              <th className="py-2 pr-3 font-medium">Motivo</th>
+              <th className="py-2 pr-3 font-medium">{t.revision.fecha}</th>
+              <th className="py-2 pr-3 font-medium">{t.revision.ticket}</th>
+              <th className="py-2 pr-3 font-medium">{t.revision.categoria}</th>
+              <th className="py-2 pr-3 font-medium">{t.revision.urgencia}</th>
+              <th className="py-2 pr-3 font-medium">{t.revision.motivo}</th>
             </tr>
           </thead>
           <tbody>
@@ -123,11 +119,11 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
                 className={`border-b border-borde/60 align-top transition hover:bg-panel-suave/50 ${tinteFila(ticket)}`}
               >
                 <td className="whitespace-nowrap py-2.5 pr-3 text-xs text-foreground/70">
-                  {formatearFecha(ticket.fecha)}
+                  {formatearFecha(ticket.fecha, idioma)}
                 </td>
                 <td className="py-2.5 pr-3">
                   <p className="font-medium">
-                    {redactar(ticket.asunto) || "(sin asunto)"}
+                    {redactar(ticket.asunto, idioma) || t.revision.sinAsunto}
                   </p>
                   <p
                     className="mt-0.5 line-clamp-2 max-w-md text-xs text-foreground/60"
@@ -139,21 +135,24 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
                 <td className="py-2.5 pr-3">
                   <Chip
                     color={colorCategoria(categoriaDeTicket(ticket), tema)}
-                    etiqueta={nombreCategoria(categoriaDeTicket(ticket))}
+                    etiqueta={nombreCategoria(
+                      categoriaDeTicket(ticket),
+                      idioma,
+                    )}
                     confianza={ticket.categoria.confianza}
                   />
                 </td>
                 <td className="py-2.5 pr-3">
                   <Chip
                     color={colorUrgencia(urgenciaDeTicket(ticket), tema)}
-                    etiqueta={nombreUrgencia(urgenciaDeTicket(ticket))}
+                    etiqueta={nombreUrgencia(urgenciaDeTicket(ticket), idioma)}
                     confianza={ticket.urgencia.confianza}
                   />
                 </td>
                 <td className="py-2.5 pr-3 text-xs text-foreground/70">
                   {ticket.motivosRevision
-                    .map((motivo) => MOTIVO[motivo])
-                    .join(" y ")}
+                    .map((motivo) => t.revision.motivos[motivo])
+                    .join(t.revision.motivos.union)}
                 </td>
               </tr>
             ))}
@@ -168,10 +167,10 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
             className={`rounded-xl border border-borde p-3 ${tinteFila(ticket)}`}
           >
             <p className="text-xs text-foreground/60">
-              {formatearFecha(ticket.fecha)}
+              {formatearFecha(ticket.fecha, idioma)}
             </p>
             <p className="mt-1 font-medium">
-              {redactar(ticket.asunto) || "(sin asunto)"}
+              {redactar(ticket.asunto, idioma) || t.revision.sinAsunto}
             </p>
             <p className="mt-1 line-clamp-3 text-xs text-foreground/60">
               {ticket.textoRedactado}
@@ -179,20 +178,20 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
             <div className="mt-2 flex flex-wrap gap-1.5">
               <Chip
                 color={colorCategoria(categoriaDeTicket(ticket), tema)}
-                etiqueta={nombreCategoria(categoriaDeTicket(ticket))}
+                etiqueta={nombreCategoria(categoriaDeTicket(ticket), idioma)}
                 confianza={ticket.categoria.confianza}
               />
               <Chip
                 color={colorUrgencia(urgenciaDeTicket(ticket), tema)}
-                etiqueta={nombreUrgencia(urgenciaDeTicket(ticket))}
+                etiqueta={nombreUrgencia(urgenciaDeTicket(ticket), idioma)}
                 confianza={ticket.urgencia.confianza}
               />
             </div>
             <p className="mt-2 text-xs text-foreground/60">
-              Revisar:{" "}
+              {t.revision.revisar}{" "}
               {ticket.motivosRevision
-                .map((motivo) => MOTIVO[motivo])
-                .join(" y ")}
+                .map((motivo) => t.revision.motivos[motivo])
+                .join(t.revision.motivos.union)}
             </p>
           </li>
         ))}
@@ -200,7 +199,7 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
 
       {filtrados.length > limite && (
         <p className="mt-3 text-xs text-foreground/50">
-          Se muestran {limite} de {filtrados.length} tickets en revisión.
+          {t.revision.mas(limite, filtrados.length)}
         </p>
       )}
     </div>
@@ -216,6 +215,7 @@ function Chip({
   etiqueta: string;
   confianza: number | null;
 }) {
+  const { idioma } = useIdioma();
   const porcentaje = confianza === null ? 0 : Math.round(confianza * 100);
   return (
     <span
@@ -238,7 +238,7 @@ function Chip({
         />
       </span>
       <span className="tabular-nums opacity-80">
-        {formatearConfianza(confianza)}
+        {formatearConfianza(confianza, idioma)}
       </span>
     </span>
   );

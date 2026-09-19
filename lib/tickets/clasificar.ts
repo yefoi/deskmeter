@@ -1,11 +1,13 @@
 import {
-  CATEGORIAS,
+  etiquetasCategoria,
+  etiquetasUrgencia,
   UMBRAL_REVISION,
-  URGENCIAS,
   valorCanonico,
   type EtiquetaDimension,
 } from "./etiquetas";
+import type { Idioma } from "./idioma";
 import { textoClasificable } from "./pii";
+import { TEXTOS_CLASIFICAR } from "./textos";
 import type {
   Asignacion,
   Dimension,
@@ -33,6 +35,7 @@ export class ErrorClasificacion extends Error {
 
 export interface OpcionesClasificacion {
   tier?: Tier;
+  idioma?: Idioma;
   loteMaximo?: number;
   concurrencia?: number;
   signal?: AbortSignal;
@@ -55,7 +58,7 @@ function pausa(ms: number, signal?: AbortSignal): Promise<void> {
     }, ms);
     const alAbortar = () => {
       clearTimeout(temporizador);
-      rechazar(new DOMException("Proceso cancelado", "AbortError"));
+      rechazar(new DOMException("Process cancelled", "AbortError"));
     };
     if (signal?.aborted) {
       alAbortar();
@@ -89,23 +92,25 @@ async function clasificarLote(
   textos: string[],
   dimension: Dimension,
   tier: Tier,
+  idioma: Idioma,
   signal?: AbortSignal,
 ): Promise<ResultadoClasificacion[]> {
+  const mensajes = TEXTOS_CLASIFICAR[idioma];
   let respuesta: Response;
   try {
     respuesta = await fetch("/api/clasificar", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ textos, dimension, tier }),
+      body: JSON.stringify({ textos, dimension, tier, idioma }),
       signal,
     });
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
-    throw new ErrorClasificacion("No se pudo contactar con classifier.dev.");
+    throw new ErrorClasificacion(mensajes.sinConexion);
   }
 
   if (!respuesta.ok) {
-    let mensaje = `classifier.dev respondió ${respuesta.status}.`;
+    let mensaje = mensajes.respuesta(respuesta.status);
     let reintentarEn: number | undefined;
     try {
       const cuerpo = (await respuesta.json()) as {
@@ -124,7 +129,7 @@ async function clasificarLote(
     resultados?: ResultadoClasificacion[];
   };
   if (!Array.isArray(cuerpo.resultados)) {
-    throw new ErrorClasificacion("Respuesta inesperada de classifier.dev.", 502);
+    throw new ErrorClasificacion(mensajes.inesperada, 502);
   }
   return cuerpo.resultados;
 }
@@ -161,9 +166,12 @@ async function conReintentos<T>(
 function asignar(
   dimension: Dimension,
   resultado: ResultadoClasificacion | undefined,
+  idioma: Idioma,
 ): Asignacion {
   const etiquetas: EtiquetaDimension<string>[] =
-    dimension === "categoria" ? CATEGORIAS : URGENCIAS;
+    dimension === "categoria"
+      ? etiquetasCategoria(idioma)
+      : etiquetasUrgencia(idioma);
   const confianza =
     typeof resultado?.confianza === "number" && Number.isFinite(resultado.confianza)
       ? resultado.confianza
@@ -189,9 +197,10 @@ export function componerTicket(
   resultadoCategoria: ResultadoClasificacion | undefined,
   resultadoUrgencia: ResultadoClasificacion | undefined,
   textoRedactado: string,
+  idioma: Idioma = "es",
 ): Ticket {
-  const categoria = asignar("categoria", resultadoCategoria);
-  const urgencia = asignar("urgencia", resultadoUrgencia);
+  const categoria = asignar("categoria", resultadoCategoria, idioma);
+  const urgencia = asignar("urgencia", resultadoUrgencia, idioma);
   const motivosRevision: Dimension[] = [];
   if (revisable(categoria)) motivosRevision.push("categoria");
   if (revisable(urgencia)) motivosRevision.push("urgencia");
@@ -212,6 +221,7 @@ export async function clasificarTickets(
 ): Promise<Ticket[]> {
   const {
     tier = "fast",
+    idioma = "es",
     loteMaximo = LOTE_MAXIMO,
     concurrencia = CONCURRENCIA,
     signal,
@@ -221,7 +231,7 @@ export async function clasificarTickets(
   if (tickets.length === 0) return [];
 
   const textos = tickets.map((ticket) =>
-    textoClasificable(ticket.asunto, ticket.descripcion),
+    textoClasificable(ticket.asunto, ticket.descripcion, undefined, idioma),
   );
   const total = tickets.length * 2;
   let hechos = 0;
@@ -234,7 +244,7 @@ export async function clasificarTickets(
     const lotes = dividirEnLotes(textos, loteMaximo);
     const porLote = await enParalelo(lotes, concurrencia, async (lote) => {
       const clasificaciones = await conReintentos(
-        () => clasificarLote(lote, dimension, tier, signal),
+        () => clasificarLote(lote, dimension, tier, idioma, signal),
         signal,
       );
       hechos += lote.length;
@@ -250,6 +260,7 @@ export async function clasificarTickets(
       resultados.categoria[indice],
       resultados.urgencia[indice],
       textos[indice],
+      idioma,
     ),
   );
 }

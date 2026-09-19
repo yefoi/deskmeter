@@ -1,6 +1,7 @@
 "use client";
 
 import type { Dimension } from "@/lib/tickets/tipos";
+import { useIdioma } from "./idioma";
 
 export interface EstadoProgreso {
   hechos: number;
@@ -8,23 +9,7 @@ export interface EstadoProgreso {
   fase: "preparando" | Dimension;
 }
 
-const PASOS = [
-  {
-    id: "redaccion",
-    titulo: "Leer y redactar",
-    detalle: "Se quitan correos, teléfonos y DNI/NIE del texto.",
-  },
-  {
-    id: "categoria",
-    titulo: "Clasificar categoría",
-    detalle: "hardware, software, redes, cuentas, facturación u otro.",
-  },
-  {
-    id: "urgencia",
-    titulo: "Clasificar urgencia",
-    detalle: "crítico, alto, normal o bajo.",
-  },
-] as const;
+const PASOS = ["redaccion", "categoria", "urgencia"] as const;
 
 type EstadoPaso = "hecho" | "activo" | "pendiente";
 
@@ -35,20 +20,21 @@ export default function Progreso({
   estado: EstadoProgreso;
   onCancelar: () => void;
 }) {
+  const { t } = useIdioma();
   const porDimension = estado.total / 2;
   const porcentaje =
     estado.total > 0 ? Math.round((estado.hechos / estado.total) * 100) : 0;
 
   const estados = PASOS.map((paso): EstadoPaso => {
-    if (paso.id === "redaccion") {
+    if (paso === "redaccion") {
       return estado.fase === "preparando" ? "activo" : "hecho";
     }
     const realizado =
-      paso.id === "categoria"
+      paso === "categoria"
         ? estado.hechos >= porDimension
         : estado.hechos >= estado.total;
     if (realizado) return "hecho";
-    return estado.fase === paso.id ? "activo" : "pendiente";
+    return estado.fase === paso ? "activo" : "pendiente";
   });
 
   return (
@@ -59,8 +45,8 @@ export default function Progreso({
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm font-medium">
           {estado.fase === "preparando"
-            ? "Preparando los tickets…"
-            : `Clasificando con classifier.dev…`}
+            ? t.progreso.preparando
+            : t.progreso.clasificando}
         </p>
         <p className="font-mono text-xs text-foreground/60">
           {estado.hechos} / {estado.total}
@@ -70,8 +56,9 @@ export default function Progreso({
       <ol className="mt-4 flex flex-col gap-3">
         {PASOS.map((paso, indice) => {
           const situacion = estados[indice];
+          const textos = t.progreso.pasos[indice];
           return (
-            <li key={paso.id} className="flex items-start gap-3">
+            <li key={paso} className="flex items-start gap-3">
               <span
                 className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] ${
                   situacion === "hecho"
@@ -108,9 +95,9 @@ export default function Progreso({
                       : "font-medium"
                   }`}
                 >
-                  {paso.titulo}
+                  {textos.titulo}
                 </p>
-                <p className="text-xs text-foreground/50">{paso.detalle}</p>
+                <p className="text-xs text-foreground/50">{textos.detalle}</p>
               </div>
             </li>
           );
@@ -126,16 +113,13 @@ export default function Progreso({
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-4">
-        <p className="text-xs text-foreground/60">
-          Dos pasadas por lote, hasta 1000 tickets por petición. No cierres la
-          pestaña.
-        </p>
+        <p className="text-xs text-foreground/60">{t.progreso.lotes}</p>
         <button
           type="button"
           onClick={onCancelar}
           className="rounded-md border border-borde px-3 py-1.5 text-xs transition hover:bg-panel-suave"
         >
-          Cancelar
+          {t.progreso.cancelar}
         </button>
       </div>
     </section>

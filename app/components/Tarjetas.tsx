@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { formatearNumero, formatearPorcentaje } from "@/lib/tickets/formato";
 import type { ResultadoIndice } from "@/lib/tickets/indice";
 import type { Granularidad, ResumenTickets } from "@/lib/tickets/tipos";
+import { useIdioma } from "./idioma";
 import IndiceGauge from "./IndiceGauge";
 import { useTema } from "./useTema";
 
@@ -26,6 +27,7 @@ export default function Tarjetas({
   periodos,
   serie,
 }: Props) {
+  const { idioma, t } = useIdioma();
   const tema = useTema();
   const delta =
     indice && indiceAnterior
@@ -36,8 +38,11 @@ export default function Tarjetas({
     <section className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-5">
       <Tarjeta
         className="min-w-[72%] snap-start sm:min-w-0"
-        titulo="Índice de salud"
-        etiqueta={`últim${granularidad === "semana" ? "a" : "o"} ${granularidad} · ${periodo}`}
+        titulo={t.tarjetas.indice}
+        etiqueta={t.tarjetas.periodoActual(
+          granularidad === "semana" ? t.panel.semana : t.panel.mes,
+          periodo,
+        )}
       >
         <IndiceGauge valor={indice?.valor ?? null} tema={tema} serie={serie} />
         {delta !== null && (
@@ -47,54 +52,58 @@ export default function Tarjetas({
             }`}
           >
             {delta >= 0 ? "+" : "−"}
-            {formatearNumero(Math.abs(delta))} vs periodo anterior
+            {formatearNumero(Math.abs(delta), idioma)} {t.tarjetas.vsAnterior}
           </p>
         )}
       </Tarjeta>
 
       <Tarjeta
         className="min-w-[62%] snap-start sm:min-w-0"
-        titulo="Tickets"
-        etiqueta={`en ${periodos} periodos`}
+        titulo={t.tarjetas.tickets}
+        etiqueta={t.tarjetas.enPeriodos(periodos)}
       >
         <p className="text-3xl font-semibold tabular-nums">
-          {formatearNumero(resumen.total)}
+          {formatearNumero(resumen.total, idioma)}
         </p>
       </Tarjeta>
 
       <Tarjeta
         className="min-w-[62%] snap-start sm:min-w-0"
-        titulo="Críticos / altos"
-        etiqueta={`${formatearNumero(resumen.criticosAltos)} tickets`}
+        titulo={t.tarjetas.criticos}
+        etiqueta={t.tarjetas.ticketsCantidad(
+          formatearNumero(resumen.criticosAltos, idioma),
+        )}
       >
         <p className="text-3xl font-semibold tabular-nums">
-          {formatearPorcentaje(resumen.porcentajeCriticosAltos)}
+          {formatearPorcentaje(resumen.porcentajeCriticosAltos, idioma)}
         </p>
       </Tarjeta>
 
       <Tarjeta
         className="min-w-[62%] snap-start sm:min-w-0"
-        titulo="Revisión manual"
-        etiqueta={`${formatearNumero(resumen.revisionManual)} tickets`}
+        titulo={t.tarjetas.revision}
+        etiqueta={t.tarjetas.ticketsCantidad(
+          formatearNumero(resumen.revisionManual, idioma),
+        )}
       >
         <p className="text-3xl font-semibold tabular-nums">
-          {formatearPorcentaje(resumen.porcentajeRevisionManual)}
+          {formatearPorcentaje(resumen.porcentajeRevisionManual, idioma)}
         </p>
       </Tarjeta>
 
       <Tarjeta
         className="min-w-[62%] snap-start sm:min-w-0"
-        titulo="Tiempo medio"
+        titulo={t.tarjetas.tiempo}
         etiqueta={
           resumen.tiempoMedioResolucion === null
-            ? "sin columna tiempo_resolucion_horas"
-            : "horas hasta la resolución"
+            ? t.tarjetas.sinColumna
+            : t.tarjetas.horas
         }
       >
         <p className="text-3xl font-semibold tabular-nums">
           {resumen.tiempoMedioResolucion === null
             ? "—"
-            : `${formatearNumero(resumen.tiempoMedioResolucion)} h`}
+            : `${formatearNumero(resumen.tiempoMedioResolucion, idioma)} h`}
         </p>
       </Tarjeta>
     </section>

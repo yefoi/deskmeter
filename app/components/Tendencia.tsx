@@ -10,7 +10,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { formatearNumero } from "@/lib/tickets/formato";
 import { COLOR_INDICE } from "./colores";
+import { useIdioma } from "./idioma";
 import { useTema } from "./useTema";
 
 interface Punto {
@@ -28,6 +30,7 @@ const ESTILO_TOOLTIP = {
 } as const;
 
 export default function Tendencia({ datos }: { datos: Punto[] }) {
+  const { idioma, t } = useIdioma();
   const tema = useTema();
   const color = COLOR_INDICE[tema];
   const media =
@@ -75,7 +78,7 @@ export default function Tendencia({ datos }: { datos: Punto[] }) {
           <Tooltip
             contentStyle={ESTILO_TOOLTIP}
             labelStyle={{ color: "var(--foreground)", fontWeight: 600 }}
-            formatter={(valor) => [`${valor}/100`, "Índice"]}
+            formatter={(valor) => [`${valor}/100`, t.tendencia.indice]}
             labelFormatter={(etiqueta, payload) =>
               payload?.[0]?.payload?.descripcion ?? etiqueta
             }
@@ -86,7 +89,9 @@ export default function Tendencia({ datos }: { datos: Punto[] }) {
               stroke="var(--borde)"
               strokeDasharray="4 4"
               label={{
-                value: `media ${media.toFixed(0)}`,
+                value: t.tendencia.media(
+                  formatearNumero(media, idioma).replace(/,0$/, ""),
+                ),
                 position: "insideTopRight",
                 fill: "var(--foreground)",
                 fontSize: 10,
@@ -97,7 +102,7 @@ export default function Tendencia({ datos }: { datos: Punto[] }) {
           <Area
             type="monotone"
             dataKey="valor"
-            name="Índice"
+            name={t.tendencia.indice}
             stroke={color}
             strokeWidth={2}
             fill="url(#tendencia-relleno)"

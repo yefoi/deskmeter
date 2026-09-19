@@ -20,6 +20,10 @@ clasificación de [classifier.dev](https://classifier.dev) (sin API key ni cuent
 - **Visualización**: portada con tendencia del índice, mapa de calor categoría × semana,
   histograma apilado, tabla de tickets en revisión manual y KPI; página `/metodologia`;
   tema claro/oscuro; responsive.
+- **Bilingüe**: la interfaz está en español (`/`, `/metodologia`) e inglés (`/en`,
+  `/en/methodology`), con conmutador en la cabecera, `<html lang>` y metadatos propios por
+  versión. Los textos viven en `lib/tickets/textos.ts` y las etiquetas que se envían al
+  clasificador cambian con el idioma.
 
 ## Qué cambia respecto a un panel corporativo
 
@@ -94,11 +98,15 @@ lib/tickets/
   csv.ts         parser, alias de columnas y validación de filas
   fechas.ts      semana ISO, mes y lectura de fechas
   pii.ts         redacción de correos, teléfonos y DNI/NIE
-  etiquetas.ts   taxonomía, instrucciones y umbral de revisión
+  etiquetas.ts   taxonomía, instrucciones y umbral de revisión (es/en)
+  textos.ts      diccionario de toda la interfaz y los mensajes (es/en)
+  idioma.ts      tipo Idioma y guardas
   clasificar.ts  lotes, reintentos, progreso y composición del ticket
   agregar.ts     resumen, agrupación por periodo y mapa de calor
   indice.ts      índice de salud y pesos
-  demo.ts        datos sintéticos deterministas
+  demo.ts        datos sintéticos deterministas (es/en)
+app/(es)/        portada y metodología en español
+app/en/          portada y /en/methodology en inglés
 app/api/clasificar/route.ts   proxy efímero a classifier.dev
 ```
 
