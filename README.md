@@ -39,12 +39,13 @@ clasificación de [classifier.dev](https://classifier.dev) (sin API key ni cuent
 
 El parser normaliza encabezados y acepta alias de exportaciones habituales (Zendesk,
 Freshdesk, Jira, Zoho): `Created at`, `Created time`, `Subject`, `Summary`, `Details`,
-`Description`, `Status`, `Priority`, `Resolution time`… Además deduce la fecha por
-encabezados que contengan `fecha`/`created`/`opened` y la descripción por
+`Description`, `Status`, `Priority`, `Resolution time`… Los encabezados pueden estar en
+español o en inglés, incluso mezclados en el mismo archivo (`date, asunto, Description`),
+y la plantilla descargable usa el idioma activo. Además deduce la fecha por encabezados
+que contengan `fecha`/`created`/`opened` y la descripción por
 `description`/`body`/`details`/`detalle`. Se leen separadores de coma, punto y coma y
 tabulador. Si faltan las tres columnas mínimas, el panel no envía nada a classifier.dev:
-avisa de cuáles faltan y de las columnas que ha detectado, y desde la portada se puede
-descargar una plantilla de ejemplo en el idioma activo.
+avisa de cuáles faltan y de las columnas que ha detectado.
 
 También se aceptan hojas de Excel (`.xlsx`), convertidas a CSV en el navegador con
 `read-excel-file` mediante import dinámico (no pesa en la carga inicial). Y cuando la

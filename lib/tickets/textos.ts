@@ -23,7 +23,7 @@ const TEXTOS_ES = {
     demo: "Cargar datos demo",
     plantilla: "Descargar plantilla",
     columnas:
-      "Columnas mínimas: fecha, asunto, descripcion. Opcionales: estado, prioridad, tiempo_resolucion_horas. Si no se detectan, podrás asignarlas a mano. Acepta CSV y Excel (.xlsx).",
+      "Columnas mínimas: fecha, asunto y descripcion (también valen date, subject y description). Opcionales: estado, prioridad y tiempo_resolucion_horas (status, priority, resolution_hours). Da igual el idioma de los encabezados, incluso mezclados. Si no se detectan, podrás asignarlas a mano. Acepta CSV y Excel (.xlsx).",
     tier: "Tier de clasificación",
     tierAyuda:
       "fast responde en una pasada; smart vuelve a preguntar lo dudoso y tarda más.",
@@ -93,7 +93,7 @@ const TEXTOS_ES = {
       {
         titulo: "1 · Sube el CSV",
         texto:
-          "Se esperan las columnas fecha, asunto y descripcion. Si además trae estado, prioridad y tiempo_resolucion_horas, se aprovechan en el panel.",
+          "Se esperan las columnas fecha, asunto y descripcion (o date, subject y description). Si además trae estado, prioridad y tiempo_resolucion_horas, se aprovechan en el panel.",
       },
       {
         titulo: "2 · Se redacta y se clasifica",
@@ -230,7 +230,7 @@ const TEXTOS_ES = {
   csvErrores: {
     vacio: "El archivo está vacío.",
     faltan: (columnas: string) =>
-      `Faltan columnas obligatorias: ${columnas}. Se esperan fecha, asunto y descripcion.`,
+      `Faltan columnas obligatorias: ${columnas}. Se esperan fecha (date), asunto (subject) y descripcion (description).`,
     columnasDetectadas: (columnas: string) =>
       `Columnas detectadas: ${columnas}. Puedes descargar la plantilla de ejemplo para comparar.`,
     limite: (limite: number) =>
@@ -287,7 +287,7 @@ const TEXTOS_EN: Textos = {
     demo: "Load demo data",
     plantilla: "Download template",
     columnas:
-      "Required columns: fecha, asunto, descripcion. Optional: estado, prioridad, tiempo_resolucion_horas. If they are not detected you can map them by hand. Accepts CSV and Excel (.xlsx).",
+      "Required columns: date, subject and description (fecha, asunto and descripcion also work). Optional: status, priority and resolution_hours (estado, prioridad, tiempo_resolucion_horas). Headers may be in either language, even mixed. If they are not detected you can map them by hand. Accepts CSV and Excel (.xlsx).",
     tier: "Classification tier",
     tierAyuda:
       "fast answers in a single pass; smart re-asks the doubtful ones and takes longer.",
@@ -356,7 +356,7 @@ const TEXTOS_EN: Textos = {
       {
         titulo: "1 · Upload the CSV",
         texto:
-          "Required columns: fecha, asunto and descripcion. If it also carries estado, prioridad and tiempo_resolucion_horas, the dashboard uses them.",
+          "Required columns: date, subject and description (or fecha, asunto and descripcion). If it also carries status, priority and resolution_hours, the dashboard uses them.",
       },
       {
         titulo: "2 · It gets redacted and classified",
@@ -493,7 +493,7 @@ const TEXTOS_EN: Textos = {
   csvErrores: {
     vacio: "The file is empty.",
     faltan: (columnas: string) =>
-      `Missing required columns: ${columnas}. Expected fecha, asunto and descripcion.`,
+      `Missing required columns: ${columnas}. Expected date (fecha), subject (asunto) and description (descripcion).`,
     columnasDetectadas: (columnas: string) =>
       `Columns found: ${columnas}. You can download the sample template to compare.`,
     limite: (limite: number) =>

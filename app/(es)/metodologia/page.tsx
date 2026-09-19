@@ -32,12 +32,12 @@ const PREGUNTAS = [
   {
     pregunta: "¿Qué columnas necesita el CSV?",
     respuesta:
-      "Fecha, asunto y descripción. Son opcionales estado, prioridad y tiempo_resolucion_horas. Los encabezados se normalizan (tildes, mayúsculas y separadores dan igual) y se aceptan alias como date, subject o description, además de fechas ISO (2026-09-18) o españolas (18/09/2026).",
+      "Fecha, asunto y descripción. Son opcionales estado, prioridad y tiempo_resolucion_horas. Los encabezados se normalizan (tildes, mayúsculas y separadores dan igual) y valen tanto en español como en inglés —fecha/date, asunto/subject, descripcion/description, estado/status, prioridad/priority, tiempo_resolucion_horas/resolution_hours—, incluso mezclados, además de alias de herramientas como created at, summary o details. Las fechas se leen en ISO (2026-09-18) o en formato español (18/09/2026).",
   },
   {
     pregunta: "¿Sirve el CSV de cualquier herramienta de tickets?",
     respuesta:
-      "Sí, siempre que incluya esas tres columnas o sus equivalentes (por ejemplo created at, subject y description). El parser acepta alias habituales de Zendesk, Freshdesk, Jira o Zoho y separadores de coma, punto y coma o tabulador. Si el export es muy distinto —sin fecha o con columnas partidas— el panel avisa de las columnas que faltan y no envía nada a classifier.dev.",
+      "Sí, siempre que incluya esas tres columnas o sus equivalentes (por ejemplo created at, subject y description) y dé igual el idioma de los encabezados. El parser acepta alias habituales de Zendesk, Freshdesk, Jira o Zoho y separadores de coma, punto y coma o tabulador. Si el export es muy distinto —sin fecha o con columnas partidas— el panel avisa de las columnas que faltan y no envía nada a classifier.dev.",
   },
   {
     pregunta: "¿Se guardan mis tickets en algún servidor?",

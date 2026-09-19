@@ -150,6 +150,28 @@ Algo falla;2026-09-01;Detalle del problema
     expect(resultado.columnasFaltantes).toEqual(["asunto", "descripcion"]);
   });
 
+  it("acepta encabezados mezclados en español e inglés", () => {
+    const csv = `date,asunto,Description,status,prioridad,resolution_hours
+2026-09-01,La impresora no imprime,La cola se atasca,Open,alta,4.5
+`;
+    const resultado = parsearCsv(csv);
+    expect(resultado.columnasFaltantes).toEqual([]);
+    expect(resultado.tickets).toHaveLength(1);
+    expect(resultado.tickets[0].descripcion).toBe("La cola se atasca");
+    expect(resultado.tickets[0].estado).toBe("Open");
+    expect(resultado.tickets[0].prioridad).toBe("alta");
+    expect(resultado.tickets[0].tiempoResolucionHoras).toBe(4.5);
+  });
+
+  it("lee la plantilla en inglés generada desde la portada", () => {
+    const csv =
+      'date,subject,description,status,priority,resolution_hours\r\n18/09/2026,Printer won\'t print,"Jobs stay queued",closed,high,3.5\r\n';
+    const resultado = parsearCsv(csv, undefined, "en");
+    expect(resultado.columnasFaltantes).toEqual([]);
+    expect(resultado.tickets[0].asunto).toBe("Printer won't print");
+    expect(resultado.tickets[0].prioridad).toBe("high");
+  });
+
   it("lee CSV con separador de punto y coma", () => {
     const csv = `fecha;asunto;descripcion
 18/09/2026;Sin conexión;El router no responde

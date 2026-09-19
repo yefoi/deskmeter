@@ -30,7 +30,9 @@ export default function Subidor({
 
   const descargarPlantilla = () => {
     const cabecera =
-      "fecha,asunto,descripcion,estado,prioridad,tiempo_resolucion_horas";
+      idioma === "es"
+        ? "fecha,asunto,descripcion,estado,prioridad,tiempo_resolucion_horas"
+        : "date,subject,description,status,priority,resolution_hours";
     const filas =
       idioma === "es"
         ? [

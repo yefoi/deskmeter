@@ -32,12 +32,12 @@ const PREGUNTAS = [
   {
     pregunta: "Which columns does the CSV need?",
     respuesta:
-      "Date, subject and description. Optional: status, priority and resolution time in hours. Headers are normalised (accents, case and separators do not matter) and aliases such as date, subject or description are accepted, with ISO (2026-09-18) or Spanish (18/09/2026) dates.",
+      "Date, subject and description. Optional: status, priority and resolution time in hours. Headers are normalised (accents, case and separators do not matter) and both English and Spanish names work —date/fecha, subject/asunto, description/descripcion, status/estado, priority/prioridad, resolution_hours/tiempo_resolucion_horas—, even mixed, plus tool aliases such as created at, summary or details. Dates are read as ISO (2026-09-18) or Spanish format (18/09/2026).",
   },
   {
     pregunta: "Does a CSV from any ticketing tool work?",
     respuesta:
-      "Yes, as long as it carries those three columns or their equivalents (for instance created at, subject and description). The parser accepts usual aliases from Zendesk, Freshdesk, Jira or Zoho and comma, semicolon or tab separators. If the export is too different —no date, or split columns— the dashboard reports the missing columns and sends nothing to classifier.dev.",
+      "Yes, as long as it carries those three columns or their equivalents (for instance created at, subject and description), whatever language the headers are in. The parser accepts usual aliases from Zendesk, Freshdesk, Jira or Zoho and comma, semicolon or tab separators. If the export is too different —no date, or split columns— the dashboard reports the missing columns and sends nothing to classifier.dev.",
   },
   {
     pregunta: "Are my tickets stored on any server?",
