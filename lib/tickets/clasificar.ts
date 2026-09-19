@@ -10,9 +10,11 @@ import { textoClasificable } from "./pii";
 import type { Sector } from "./sectores";
 import { TEXTOS_CLASIFICAR } from "./textos";
 import type {
+  AreaAdicional,
   Asignacion,
   Dimension,
   ResultadoClasificacion,
+  ResultadoMulti,
   Ticket,
   TicketCrudo,
   Tier,
@@ -21,6 +23,8 @@ import type {
 export const LOTE_MAXIMO = 1000;
 export const CONCURRENCIA = 2;
 export const INTENTOS = 4;
+
+export type FaseClasificacion = Dimension | "areas";
 
 export class ErrorClasificacion extends Error {
   estado?: number;
@@ -38,10 +42,11 @@ export interface OpcionesClasificacion {
   tier?: Tier;
   idioma?: Idioma;
   sector?: Sector;
+  multiEtiqueta?: boolean;
   loteMaximo?: number;
   concurrencia?: number;
   signal?: AbortSignal;
-  alProgreso?: (hechos: number, total: number, fase: Dimension) => void;
+  alProgreso?: (hechos: number, total: number, fase: FaseClasificacion) => void;
 }
 
 export function dividirEnLotes<T>(elementos: T[], tamano = LOTE_MAXIMO): T[][] {
@@ -90,21 +95,18 @@ async function enParalelo<T, R>(
   return resultados;
 }
 
-async function clasificarLote(
-  textos: string[],
-  dimension: Dimension,
-  tier: Tier,
+async function pedirClasificacion(
+  cuerpo: Record<string, unknown>,
   idioma: Idioma,
-  sector: Sector,
   signal?: AbortSignal,
-): Promise<{ resultados: ResultadoClasificacion[]; modelo?: string }> {
+): Promise<Record<string, unknown>> {
   const mensajes = TEXTOS_CLASIFICAR[idioma];
   let respuesta: Response;
   try {
     respuesta = await fetch("/api/clasificar", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ textos, dimension, tier, idioma, sector }),
+      body: JSON.stringify(cuerpo),
       signal,
     });
   } catch (error) {
@@ -116,28 +118,63 @@ async function clasificarLote(
     let mensaje = mensajes.respuesta(respuesta.status);
     let reintentarEn: number | undefined;
     try {
-      const cuerpo = (await respuesta.json()) as {
+      const error = (await respuesta.json()) as {
         error?: string;
         retryAfter?: number;
       };
-      if (typeof cuerpo.error === "string" && cuerpo.error) mensaje = cuerpo.error;
-      if (typeof cuerpo.retryAfter === "number") reintentarEn = cuerpo.retryAfter;
+      if (typeof error.error === "string" && error.error) mensaje = error.error;
+      if (typeof error.retryAfter === "number") reintentarEn = error.retryAfter;
     } catch {
       // Respuesta sin JSON: se conserva el mensaje por defecto.
     }
     throw new ErrorClasificacion(mensaje, respuesta.status, reintentarEn);
   }
 
-  const cuerpo = (await respuesta.json()) as {
-    resultados?: ResultadoClasificacion[];
-    modelo?: unknown;
-  };
+  return (await respuesta.json()) as Record<string, unknown>;
+}
+
+function modeloDe(cuerpo: Record<string, unknown>): string | undefined {
+  return typeof cuerpo.modelo === "string" ? cuerpo.modelo : undefined;
+}
+
+async function clasificarLote(
+  textos: string[],
+  dimension: Dimension,
+  tier: Tier,
+  idioma: Idioma,
+  sector: Sector,
+  signal?: AbortSignal,
+): Promise<{ resultados: ResultadoClasificacion[]; modelo?: string }> {
+  const cuerpo = await pedirClasificacion(
+    { textos, dimension, tier, idioma, sector },
+    idioma,
+    signal,
+  );
   if (!Array.isArray(cuerpo.resultados)) {
-    throw new ErrorClasificacion(mensajes.inesperada, 502);
+    throw new ErrorClasificacion(TEXTOS_CLASIFICAR[idioma].inesperada, 502);
   }
   return {
-    resultados: cuerpo.resultados,
-    modelo: typeof cuerpo.modelo === "string" ? cuerpo.modelo : undefined,
+    resultados: cuerpo.resultados as ResultadoClasificacion[],
+    modelo: modeloDe(cuerpo),
+  };
+}
+
+async function clasificarLoteMulti(
+  textos: string[],
+  idioma: Idioma,
+  signal?: AbortSignal,
+): Promise<{ resultados: ResultadoMulti[]; modelo?: string }> {
+  const cuerpo = await pedirClasificacion(
+    { textos, dimension: "categoria", tier: "fast", idioma, multi: true },
+    idioma,
+    signal,
+  );
+  if (!Array.isArray(cuerpo.areas)) {
+    throw new ErrorClasificacion(TEXTOS_CLASIFICAR[idioma].inesperada, 502);
+  }
+  return {
+    resultados: cuerpo.areas as ResultadoMulti[],
+    modelo: modeloDe(cuerpo),
   };
 }
 
@@ -199,12 +236,34 @@ function revisable(asignacion: Asignacion): boolean {
   );
 }
 
+function areasAdicionales(
+  resultado: ResultadoMulti | undefined,
+  principal: string | undefined,
+  idioma: Idioma,
+): AreaAdicional[] {
+  if (!resultado) return [];
+  const etiquetas = etiquetasCategoria(idioma);
+  const areas: AreaAdicional[] = [];
+  for (const label of resultado.etiquetas) {
+    const valor = valorCanonico(etiquetas, label);
+    if (!valor || valor === principal) continue;
+    if (areas.some((area) => area.etiqueta === valor)) continue;
+    const score = resultado.scores?.[label];
+    areas.push({
+      etiqueta: valor,
+      score: typeof score === "number" && Number.isFinite(score) ? score : 0,
+    });
+  }
+  return areas;
+}
+
 export function componerTicket(
   crudo: TicketCrudo,
   resultadoCategoria: ResultadoClasificacion | undefined,
   resultadoUrgencia: ResultadoClasificacion | undefined,
   textoRedactado: string,
   idioma: Idioma = "es",
+  areas: AreaAdicional[] = [],
 ): Ticket {
   const categoria = asignar("categoria", resultadoCategoria, idioma);
   const urgencia = asignar("urgencia", resultadoUrgencia, idioma);
@@ -217,6 +276,7 @@ export function componerTicket(
     textoRedactado,
     categoria,
     urgencia,
+    areasAdicionales: areas,
     revisionManual: motivosRevision.length > 0,
     motivosRevision,
   };
@@ -227,6 +287,7 @@ export interface ResultadoClasificacionTickets {
   total: number;
   unicos: number;
   repetidos: number;
+  conAreas: number;
   modelos: string[];
 }
 
@@ -238,6 +299,7 @@ export async function clasificarTickets(
     tier = "fast",
     idioma = "es",
     sector = "general",
+    multiEtiqueta = false,
     loteMaximo = LOTE_MAXIMO,
     concurrencia = CONCURRENCIA,
     signal,
@@ -245,7 +307,14 @@ export async function clasificarTickets(
   } = opciones;
 
   if (tickets.length === 0) {
-    return { tickets: [], total: 0, unicos: 0, repetidos: 0, modelos: [] };
+    return {
+      tickets: [],
+      total: 0,
+      unicos: 0,
+      repetidos: 0,
+      conAreas: 0,
+      modelos: [],
+    };
   }
 
   const textos = tickets.map((ticket) =>
@@ -265,7 +334,8 @@ export async function clasificarTickets(
     mapeo.push(indice);
   }
 
-  const total = unicos.length * 2;
+  const numFases = multiEtiqueta ? 3 : 2;
+  const total = unicos.length * numFases;
   let hechos = 0;
   const resultados: Record<Dimension, ResultadoClasificacion[]> = {
     categoria: [],
@@ -290,19 +360,47 @@ export async function clasificarTickets(
     }
   }
 
+  let multis: ResultadoMulti[] = [];
+  if (multiEtiqueta) {
+    const lotes = dividirEnLotes(unicos, loteMaximo);
+    const porLote = await enParalelo(lotes, concurrencia, async (lote) => {
+      const areas = await conReintentos(
+        () => clasificarLoteMulti(lote, idioma, signal),
+        signal,
+      );
+      hechos += lote.length;
+      alProgreso?.(hechos, total, "areas");
+      return areas;
+    });
+    multis = porLote.flatMap((lote) => lote.resultados);
+    for (const lote of porLote) {
+      if (lote.modelo) modelos.add(lote.modelo);
+    }
+  }
+
+  let conAreas = 0;
+  const clasificados = tickets.map((ticket, indice) => {
+    const categoria = resultados.categoria[mapeo[indice]];
+    const areas = multiEtiqueta
+      ? areasAdicionales(multis[mapeo[indice]], categoria?.etiqueta, idioma)
+      : [];
+    if (areas.length > 0) conAreas++;
+    return componerTicket(
+      ticket,
+      categoria,
+      resultados.urgencia[mapeo[indice]],
+      textos[indice],
+      idioma,
+      areas,
+    );
+  });
+
   return {
-    tickets: tickets.map((ticket, indice) =>
-      componerTicket(
-        ticket,
-        resultados.categoria[mapeo[indice]],
-        resultados.urgencia[mapeo[indice]],
-        textos[indice],
-        idioma,
-      ),
-    ),
+    tickets: clasificados,
     total: tickets.length,
     unicos: unicos.length,
     repetidos: tickets.length - unicos.length,
+    conAreas,
     modelos: [...modelos],
   };
 }

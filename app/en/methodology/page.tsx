@@ -186,7 +186,12 @@ export default function Page() {
             therefore never show up with two different classifications, and the
             classifier quota goes further. The urgency criterion can be tuned
             by sector (clinic or healthcare, retail with POS, school or
-            education) with its own instructions sent in every request.
+            education) with its own instructions sent in every request. An
+            optional multi-label pass detects which other areas each ticket
+            touches (for instance, networking and accounts at once); those
+            areas appear in the review table, but aggregation and the index
+            keep using the primary category so the same ticket is not counted
+            twice.
           </p>
         </div>
 

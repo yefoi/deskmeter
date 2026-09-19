@@ -35,6 +35,9 @@ const TEXTOS_ES = {
       colegio: "Colegio / educación",
     },
     sectorAyuda: "Las instrucciones de urgencia se afinan al sector.",
+    multi: "Detectar áreas adicionales",
+    multiAyuda:
+      "Una pasada multi-etiqueta extra: muestra qué otras áreas toca cada ticket y gasta más cuota.",
     privacidad:
       "El CSV se procesa en tu navegador. Solo sale hacia classifier.dev el texto redactado de cada ticket (correos, teléfonos y DNI/NIE sustituidos antes de enviar). Nada se guarda en el servidor.",
   },
@@ -85,6 +88,10 @@ const TEXTOS_ES = {
     lotes:
       "Dos pasadas por lote, hasta 1000 tickets por petición. No cierres la pestaña.",
     cancelar: "Cancelar",
+    pasoAreas: {
+      titulo: "Detectar áreas adicionales",
+      detalle: "Qué otras áreas toca el ticket (multi-etiqueta).",
+    },
   },
   deskmeter: {
     errorLectura: "No se pudo leer el archivo.",
@@ -94,6 +101,8 @@ const TEXTOS_ES = {
     errorExcel: "No se pudo leer el archivo de Excel (.xlsx).",
     repetidosReutilizados: (cantidad: number) =>
       `${cantidad} ticket(s) con texto idéntico comparten la clasificación de su texto.`,
+    ticketsConAreas: (cantidad: number) =>
+      `${cantidad} ticket(s) tocan más de un área; están marcados en la tabla de revisión.`,
     filasDescartadas: (cantidad: number) =>
       `${cantidad} fila(s) descartada(s) por fecha no válida.`,
     cancelado: "Proceso cancelado.",
@@ -190,6 +199,7 @@ const TEXTOS_ES = {
     urgencia: "Urgencia",
     motivo: "Motivo",
     revisar: "Revisar:",
+    masAreas: "También toca:",
     sinAsunto: "(sin asunto)",
     mas: (limite: number, total: number) =>
       `Se muestran ${limite} de ${total} tickets en revisión.`,
@@ -295,6 +305,7 @@ const TEXTOS_ES = {
       "urgencia",
       "confianza_urgencia",
       "motivos_revision",
+      "areas_adicionales",
     ],
   },
 };
@@ -335,6 +346,9 @@ const TEXTOS_EN: Textos = {
       colegio: "School / education",
     },
     sectorAyuda: "Urgency instructions are tuned to the sector.",
+    multi: "Detect additional areas",
+    multiAyuda:
+      "An extra multi-label pass: shows which other areas each ticket touches and uses more quota.",
     privacidad:
       "The CSV is processed in your browser. Only the redacted text of each ticket leaves towards classifier.dev (emails, phones and ID numbers replaced before sending). Nothing is stored on the server.",
   },
@@ -384,6 +398,10 @@ const TEXTOS_EN: Textos = {
     lotes:
       "Two passes per batch, up to 1000 tickets per request. Don't close the tab.",
     cancelar: "Cancel",
+    pasoAreas: {
+      titulo: "Detect additional areas",
+      detalle: "Which other areas the ticket touches (multi-label).",
+    },
   },
   deskmeter: {
     errorLectura: "The file could not be read.",
@@ -393,6 +411,8 @@ const TEXTOS_EN: Textos = {
     errorExcel: "The Excel file (.xlsx) could not be read.",
     repetidosReutilizados: (cantidad: number) =>
       `${cantidad} ticket(s) with identical text share the classification of their text.`,
+    ticketsConAreas: (cantidad: number) =>
+      `${cantidad} ticket(s) touch more than one area; they are flagged in the review table.`,
     filasDescartadas: (cantidad: number) =>
       `${cantidad} row(s) dropped for an invalid date.`,
     cancelado: "Process cancelled.",
@@ -489,6 +509,7 @@ const TEXTOS_EN: Textos = {
     urgencia: "Urgency",
     motivo: "Reason",
     revisar: "Review:",
+    masAreas: "Also touches:",
     sinAsunto: "(no subject)",
     mas: (limite: number, total: number) =>
       `Showing ${limite} of ${total} tickets in review.`,
@@ -594,6 +615,7 @@ const TEXTOS_EN: Textos = {
       "urgency",
       "urgency_confidence",
       "review_reasons",
+      "additional_areas",
     ],
   },
 };

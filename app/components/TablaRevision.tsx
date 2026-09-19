@@ -141,6 +141,18 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
                     )}
                     confianza={ticket.categoria.confianza}
                   />
+                  {ticket.areasAdicionales &&
+                    ticket.areasAdicionales.length > 0 && (
+                      <p className="mt-1 text-[11px] text-foreground/50">
+                        {t.revision.masAreas}{" "}
+                        {ticket.areasAdicionales
+                          .map(
+                            (area) =>
+                              `${nombreCategoria(area.etiqueta, idioma)} (${formatearConfianza(area.score, idioma)})`,
+                          )
+                          .join(", ")}
+                      </p>
+                    )}
                 </td>
                 <td className="py-2.5 pr-3">
                   <Chip
@@ -187,6 +199,17 @@ export default function TablaRevision({ tickets, limite = 80 }: Props) {
                 confianza={ticket.urgencia.confianza}
               />
             </div>
+            {ticket.areasAdicionales && ticket.areasAdicionales.length > 0 && (
+              <p className="mt-2 text-xs text-foreground/50">
+                {t.revision.masAreas}{" "}
+                {ticket.areasAdicionales
+                  .map(
+                    (area) =>
+                      `${nombreCategoria(area.etiqueta, idioma)} (${formatearConfianza(area.score, idioma)})`,
+                  )
+                  .join(", ")}
+              </p>
+            )}
             <p className="mt-2 text-xs text-foreground/60">
               {t.revision.revisar}{" "}
               {ticket.motivosRevision

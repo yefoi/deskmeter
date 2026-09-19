@@ -32,6 +32,7 @@ export default function Deskmeter() {
   const [aviso, setAviso] = useState<string | null>(null);
   const [tier, setTier] = useState<Tier>("fast");
   const [sector, setSector] = useState<Sector>("general");
+  const [multiEtiqueta, setMultiEtiqueta] = useState(false);
   const [modelos, setModelos] = useState<string[]>([]);
   const [comparacion, setComparacion] = useState<{
     tickets: Ticket[];
@@ -121,17 +122,26 @@ export default function Deskmeter() {
           tier,
           idioma,
           sector,
+          multiEtiqueta,
           signal: control.signal,
           alProgreso: (hechos, total, fase) =>
             setProgreso({ hechos, total, fase }),
         });
         setTickets(clasificado.tickets);
         setModelos(clasificado.modelos);
+        const mensajes: string[] = [];
         if (clasificado.repetidos > 0) {
-          const mensaje = t.deskmeter.repetidosReutilizados(
-            clasificado.repetidos,
+          mensajes.push(
+            t.deskmeter.repetidosReutilizados(clasificado.repetidos),
           );
-          setAviso((actual) => (actual ? `${actual} ${mensaje}` : mensaje));
+        }
+        if (clasificado.conAreas > 0) {
+          mensajes.push(t.deskmeter.ticketsConAreas(clasificado.conAreas));
+        }
+        if (mensajes.length > 0) {
+          setAviso((actual) =>
+            actual ? `${actual} ${mensajes.join(" ")}` : mensajes.join(" "),
+          );
         }
       } catch (fallo) {
         if (fallo instanceof DOMException && fallo.name === "AbortError") {
@@ -146,7 +156,7 @@ export default function Deskmeter() {
         controlador.current = null;
       }
     },
-    [idioma, t, tier, sector],
+    [idioma, t, tier, sector, multiEtiqueta],
   );
 
   const procesarArchivo = useCallback(
@@ -232,6 +242,7 @@ export default function Deskmeter() {
           tier,
           idioma,
           sector,
+          multiEtiqueta,
           signal: control.signal,
           alProgreso: (hechos, total) =>
             setProgresoComparacion({ hechos, total }),
@@ -248,7 +259,7 @@ export default function Deskmeter() {
         controladorComparacion.current = null;
       }
     },
-    [idioma, t, tier, sector],
+    [idioma, t, tier, sector, multiEtiqueta],
   );
 
   const quitarComparacion = () => {
@@ -307,11 +318,17 @@ export default function Deskmeter() {
               onTier={setTier}
               sector={sector}
               onSector={setSector}
+              multiEtiqueta={multiEtiqueta}
+              onMultiEtiqueta={setMultiEtiqueta}
             />
           )}
           {progreso && (
             <div className="aparecer flex flex-col gap-6">
-              <Progreso estado={progreso} onCancelar={cancelar} />
+              <Progreso
+                estado={progreso}
+                conAreas={multiEtiqueta}
+                onCancelar={cancelar}
+              />
               <EsqueletoPanel />
             </div>
           )}

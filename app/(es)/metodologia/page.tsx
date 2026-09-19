@@ -186,6 +186,11 @@ export default function Page() {
             clasificador se aprovecha mejor. El criterio de urgencia se puede
             afinar por sector (clínica o salud, comercio con TPV, colegio o
             educación) con instrucciones propias enviadas en cada petición.
+            Opcionalmente se puede activar una pasada multi-etiqueta que
+            detecta qué otras áreas toca el ticket (por ejemplo, redes y
+            cuentas a la vez); esas áreas se muestran en la tabla de revisión,
+            pero la agregación y el índice siguen usando la categoría
+            principal para no contar dos veces el mismo ticket.
           </p>
         </div>
 

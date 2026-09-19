@@ -91,6 +91,9 @@ export function exportarRevisionCsv(
     nombreUrgencia(urgenciaDeTicket(ticket), idioma),
     confianzaCsv(ticket.urgencia.confianza),
     ticket.motivosRevision.join("+"),
+    (ticket.areasAdicionales ?? [])
+      .map((area) => nombreCategoria(area.etiqueta, idioma))
+      .join("+"),
   ]);
 
   return (

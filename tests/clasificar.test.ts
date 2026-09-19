@@ -103,4 +103,76 @@ describe("clasificarTickets", () => {
     expect(resultado.repetidos).toBe(0);
     expect(tamanosLote).toEqual([2, 2]);
   });
+
+  it("añade áreas adicionales cuando se activa multi-etiqueta", async () => {
+    const peticiones: { dimension?: string; multi?: boolean }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      async (_url: string, init: RequestInit) => {
+        const cuerpo = JSON.parse(String(init.body)) as {
+          textos: string[];
+          dimension: string;
+          multi?: boolean;
+        };
+        peticiones.push({ dimension: cuerpo.dimension, multi: cuerpo.multi });
+        if (cuerpo.multi) {
+          return new Response(
+            JSON.stringify({
+              multi: true,
+              areas: [
+                {
+                  etiquetas: ["software", "networking"],
+                  scores: { software: 0.9, networking: 0.8 },
+                },
+              ],
+              modelo: "mock-1",
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          );
+        }
+        return respuestaSimulada(cuerpo.textos, cuerpo.dimension);
+      },
+    );
+
+    const resultado = await clasificarTickets([crudo("a")], {
+      multiEtiqueta: true,
+      idioma: "en",
+    });
+
+    expect(resultado.tickets[0].categoria.etiqueta).toBe("software");
+    expect(
+      resultado.tickets[0].areasAdicionales?.map((area) => area.etiqueta),
+    ).toEqual(["redes"]);
+    expect(resultado.tickets[0].areasAdicionales?.[0].score).toBe(0.8);
+    expect(resultado.conAreas).toBe(1);
+    expect(resultado.modelos).toEqual(["mock-1"]);
+    expect(peticiones).toEqual([
+      { dimension: "categoria", multi: undefined },
+      { dimension: "urgencia", multi: undefined },
+      { dimension: "categoria", multi: true },
+    ]);
+  });
+
+  it("no pide áreas adicionales por defecto", async () => {
+    const peticiones: { multi?: boolean }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      async (_url: string, init: RequestInit) => {
+        const cuerpo = JSON.parse(String(init.body)) as {
+          textos: string[];
+          dimension: string;
+          multi?: boolean;
+        };
+        peticiones.push({ multi: cuerpo.multi });
+        return respuestaSimulada(cuerpo.textos, cuerpo.dimension);
+      },
+    );
+
+    const resultado = await clasificarTickets([crudo("a")]);
+    expect(peticiones.every((peticion) => peticion.multi === undefined)).toBe(
+      true,
+    );
+    expect(resultado.tickets[0].areasAdicionales).toEqual([]);
+    expect(resultado.conAreas).toBe(0);
+  });
 });

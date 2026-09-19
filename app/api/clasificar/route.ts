@@ -24,6 +24,7 @@ interface CuerpoPeticion {
   tier?: unknown;
   idioma?: unknown;
   sector?: unknown;
+  multi?: unknown;
 }
 
 export async function POST(request: Request) {
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
 
   const idioma: Idioma = esIdioma(cuerpo.idioma) ? cuerpo.idioma : "es";
   const sector = esSector(cuerpo.sector) ? cuerpo.sector : "general";
+  const multi = cuerpo.multi === true;
   const mensajes = TEXTOS_API[idioma];
   const textos = Array.isArray(cuerpo.textos) ? cuerpo.textos : [];
   const dimension = cuerpo.dimension;
@@ -87,6 +89,7 @@ export async function POST(request: Request) {
           labels: etiquetas,
           tier,
           instructions: instrucciones,
+          ...(multi ? { multi: true } : {}),
         }),
         signal: AbortSignal.timeout(TIEMPO_LIMITE_MS),
       });
@@ -125,10 +128,32 @@ export async function POST(request: Request) {
   }
 
   const datos = (await respuesta.json()) as {
-    results?: { label?: unknown; confidence?: unknown }[];
+    results?: {
+      label?: unknown;
+      confidence?: unknown;
+      labels?: unknown;
+      scores?: unknown;
+    }[];
     model?: unknown;
     tier?: unknown;
   };
+
+  if (multi) {
+    const areas = (datos.results ?? []).map((resultado) => ({
+      etiquetas: Array.isArray(resultado.labels)
+        ? resultado.labels.filter((label): label is string => typeof label === "string")
+        : [],
+      scores:
+        typeof resultado.scores === "object" && resultado.scores !== null
+          ? (resultado.scores as Record<string, number>)
+          : {},
+    }));
+    return NextResponse.json({
+      multi: true,
+      areas,
+      modelo: typeof datos.model === "string" ? datos.model : undefined,
+    });
+  }
 
   const resultados = (datos.results ?? []).map((resultado) => ({
     etiqueta: typeof resultado.label === "string" ? resultado.label : "",

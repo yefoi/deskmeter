@@ -92,11 +92,12 @@ describe("redacción y CSV por idioma", () => {
       textoRedactado: "Printer down desc",
       categoria: { etiqueta: "hardware", confianza: 0.9, valida: true },
       urgencia: { etiqueta: "alto", confianza: 0.5, valida: true },
+      areasAdicionales: [{ etiqueta: "redes", score: 0.8 }],
       revisionManual: true,
       motivosRevision: ["urgencia"],
     };
     const csv = exportarRevisionCsv([ticket], "en");
     expect(csv).toContain("date;subject;redacted_text;category");
-    expect(csv).toContain("hardware;0.90;high;0.50;urgencia");
+    expect(csv).toContain("hardware;0.90;high;0.50;urgencia;networking");
   });
 });

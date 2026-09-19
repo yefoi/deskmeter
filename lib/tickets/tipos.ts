@@ -30,10 +30,21 @@ export interface Asignacion {
   valida: boolean;
 }
 
+export interface AreaAdicional {
+  etiqueta: Categoria;
+  score: number;
+}
+
+export interface ResultadoMulti {
+  etiquetas: string[];
+  scores: Record<string, number>;
+}
+
 export interface Ticket extends TicketCrudo {
   textoRedactado: string;
   categoria: Asignacion;
   urgencia: Asignacion;
+  areasAdicionales?: AreaAdicional[];
   revisionManual: boolean;
   motivosRevision: Dimension[];
 }

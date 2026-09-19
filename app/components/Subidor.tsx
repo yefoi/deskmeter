@@ -14,6 +14,8 @@ interface Props {
   onTier: (tier: Tier) => void;
   sector: Sector;
   onSector: (sector: Sector) => void;
+  multiEtiqueta: boolean;
+  onMultiEtiqueta: (activo: boolean) => void;
 }
 
 export default function Subidor({
@@ -24,6 +26,8 @@ export default function Subidor({
   onTier,
   sector,
   onSector,
+  multiEtiqueta,
+  onMultiEtiqueta,
 }: Props) {
   const { idioma, t } = useIdioma();
   const [arrastrando, setArrastrando] = useState(false);
@@ -178,6 +182,20 @@ export default function Subidor({
             </select>
             <span className="text-foreground/50">{t.subidor.sectorAyuda}</span>
           </div>
+
+          <label className="mt-3 flex items-start gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={multiEtiqueta}
+              disabled={procesando}
+              onChange={(evento) => onMultiEtiqueta(evento.target.checked)}
+              className="mt-0.5 accent-[var(--acento)]"
+            />
+            <span>
+              <span className="text-foreground/70">{t.subidor.multi}</span>{" "}
+              <span className="text-foreground/50">{t.subidor.multiAyuda}</span>
+            </span>
+          </label>
 
           <p className="mt-4 text-xs leading-relaxed text-foreground/60">
             {t.subidor.privacidad}

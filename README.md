@@ -108,6 +108,13 @@ export nunca aparece con dos clasificaciones distintas (y no consume cuota extra
 la urgencia, el parámetro `instructions` de classifier.dev se adapta al sector elegido
 (general, clínica, comercio con TPV o colegio).
 
+La casilla **«Detectar áreas adicionales»** añade una tercera pasada con `multi=true`
+que guarda qué otras áreas toca cada ticket (por ejemplo, redes y cuentas de acceso a la
+vez). Las áreas adicionales aparecen en la tabla de revisión (con su score) y en el CSV
+exportado, pero la agregación, el índice y la comparación siguen contando solo la
+categoría principal, para no contar dos veces el mismo ticket. Va desactivada por
+defecto porque suma una clasificación por texto único.
+
 Un ticket se marca para **revisión manual** cuando la confianza de cualquiera de las dos
 dimensiones es menor que `0.7`, cuando llega como `null` (texto que no parece lenguaje
 natural) o cuando la etiqueta no encaja en la taxonomía. Es el mismo criterio que

@@ -1,39 +1,39 @@
 "use client";
 
-import type { Dimension } from "@/lib/tickets/tipos";
+import type { FaseClasificacion } from "@/lib/tickets/clasificar";
 import { useIdioma } from "./idioma";
 
 export interface EstadoProgreso {
   hechos: number;
   total: number;
-  fase: "preparando" | Dimension;
+  fase: "preparando" | FaseClasificacion;
 }
 
-const PASOS = ["redaccion", "categoria", "urgencia"] as const;
+const PASOS_BASE = ["redaccion", "categoria", "urgencia"] as const;
 
 type EstadoPaso = "hecho" | "activo" | "pendiente";
 
 export default function Progreso({
   estado,
+  conAreas = false,
   onCancelar,
 }: {
   estado: EstadoProgreso;
+  conAreas?: boolean;
   onCancelar: () => void;
 }) {
   const { t } = useIdioma();
-  const porDimension = estado.total / 2;
+  const pasos = conAreas ? [...PASOS_BASE, "areas" as const] : [...PASOS_BASE];
+  const numFases = conAreas ? 3 : 2;
+  const porFase = estado.total / numFases;
   const porcentaje =
     estado.total > 0 ? Math.round((estado.hechos / estado.total) * 100) : 0;
 
-  const estados = PASOS.map((paso): EstadoPaso => {
+  const estados = pasos.map((paso, indice): EstadoPaso => {
     if (paso === "redaccion") {
       return estado.fase === "preparando" ? "activo" : "hecho";
     }
-    const realizado =
-      paso === "categoria"
-        ? estado.hechos >= porDimension
-        : estado.hechos >= estado.total;
-    if (realizado) return "hecho";
+    if (estado.hechos >= porFase * indice) return "hecho";
     return estado.fase === paso ? "activo" : "pendiente";
   });
 
@@ -54,9 +54,10 @@ export default function Progreso({
       </div>
 
       <ol className="mt-4 flex flex-col gap-3">
-        {PASOS.map((paso, indice) => {
+        {pasos.map((paso, indice) => {
           const situacion = estados[indice];
-          const textos = t.progreso.pasos[indice];
+          const textos =
+            paso === "areas" ? t.progreso.pasoAreas : t.progreso.pasos[indice];
           return (
             <li key={paso} className="flex items-start gap-3">
               <span
