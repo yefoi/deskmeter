@@ -1,36 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Deskmeter
 
-## Getting Started
+Panel de salud de una mesa de ayuda a partir del CSV de tickets exportado, con la
+clasificación de [classifier.dev](https://classifier.dev) (sin API key ni cuenta) y un
+índice propio. Next.js 15 (App Router), TypeScript, Recharts y papaparse.
 
-First, run the development server:
+- **Ingesta**: el CSV se lee en el navegador con papaparse. Columnas mínimas `fecha`,
+  `asunto` y `descripcion`; opcionales `estado`, `prioridad` y
+  `tiempo_resolucion_horas`. Se aceptan alias (`date`, `subject`, `description`…),
+  fechas ISO o `dd/mm/aaaa` y coma decimal en las horas. Las filas con fecha no válida
+  se descartan y se cuentan. Hay modo demo con datos sintéticos.
+- **Redacción**: antes de enviar nada a classifier.dev, unas regex simples sustituyen
+  correos, teléfonos y DNI/NIE por `[EMAIL]`, `[TELEFONO]` y `[DNI]`. El texto
+  (asunto + descripción) se limpia y se trunca a ~500 caracteres.
+- **Clasificación**: dos pasadas por lote (categoría y urgencia), hasta 1000 tickets
+  por request cada una, tier `fast` por defecto. La API route es efímera: reenvía y
+  devuelve, no guarda nada.
+- **Agregación**: por semana ISO y por mes; histograma por categoría, % de críticos/altos,
+  % de revisión manual y tiempo medio de resolución.
+- **Visualización**: portada con tendencia del índice, mapa de calor categoría × semana,
+  histograma apilado, tabla de tickets en revisión manual y KPI; página `/metodologia`;
+  tema claro/oscuro; responsive.
+
+## Puesta en marcha
+
+Requisitos: Node.js 20 o superior y npm.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev            # web en http://localhost:3000
+npm test               # tests de parser, índice, PII, fechas y agregación
+npm run typecheck
+npm run lint
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+No hay variables de entorno: classifier.dev no pide clave y el proyecto funciona en
+local o en Vercel tal cual. `ejemplos/tickets-ejemplo.csv` sirve para probar la subida;
+el botón «Cargar datos demo» muestra el panel al instante con clasificación simulada.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Clasificación con classifier.dev
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Cada ticket se clasifica en dos pasadas independientes:
 
-## Learn More
+| Pasada | Etiquetas |
+| --- | --- |
+| `categoria` | hardware, software, redes, cuentas_accesos, facturacion, otro |
+| `urgencia` | critico, alto, normal, bajo |
 
-To learn more about Next.js, take a look at the following resources:
+El texto que se envía es asunto + descripción, redactado y truncado. Las peticiones se
+agrupan en lotes de hasta 1000 (el máximo de la API) con dos en paralelo, y se
+reintentan los 429 respetando `Retry-After` y los fallos 5xx con espera exponencial.
+De cada respuesta se guarda la etiqueta y su confianza calibrada.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Un ticket se marca para **revisión manual** cuando la confianza de cualquiera de las dos
+dimensiones es menor que `0.7`, cuando llega como `null` (texto que no parece lenguaje
+natural) o cuando la etiqueta no encaja en la taxonomía. Es el mismo criterio que
+`classify --review 0.7` de la CLI de classifier.dev. El tier por defecto es `fast`; el
+selector permite `smart`, que vuelve a preguntar lo dudoso y tarda más.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Índice de salud (0–100)
 
-## Deploy on Vercel
+Nota propia por semana y por mes, donde **100 es la mejor salud**. Pondera volumen total
+(invertido), % de críticos/altos, % de revisión manual y tiempo medio de resolución. Los
+pesos viven en `lib/tickets/indice.ts`:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+| Componente | Peso | Normalización | Mejor si… |
+| --- | --- | --- | --- |
+| Volumen total | 20 % | min-max invertido entre periodos | menos tickets |
+| % críticos / altos | 40 % | `1 − porcentaje / 100` | menos críticos |
+| % revisión manual | 20 % | `1 − porcentaje / 100` | menos revisión |
+| Tiempo medio | 20 % | min-max invertido entre periodos | menos horas |
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Si no hay columna `tiempo_resolucion_horas` (o ningún ticket trae valor), ese componente
+desaparece y los pesos se renormalizan entre los disponibles. Volumen y tiempo son
+relativos a los periodos presentes en los datos; con un único periodo valen 0,5 y el
+índice queda determinado por los porcentajes. La explicación completa está en
+`/metodologia`.
+
+## Estructura
+
+```
+lib/tickets/
+  csv.ts         parser, alias de columnas y validación de filas
+  fechas.ts      semana ISO, mes y lectura de fechas
+  pii.ts         redacción de correos, teléfonos y DNI/NIE
+  etiquetas.ts   taxonomía, instrucciones y umbral de revisión
+  clasificar.ts  lotes, reintentos, progreso y composición del ticket
+  agregar.ts     resumen, agrupación por periodo y mapa de calor
+  indice.ts      índice de salud y pesos
+  demo.ts        datos sintéticos deterministas
+app/api/clasificar/route.ts   proxy efímero a classifier.dev
+```
+
+## Privacidad
+
+El CSV se procesa en el navegador y no se persiste en ningún servidor. La API route solo
+reenvía a classifier.dev el texto ya redactado de cada ticket y devuelve la respuesta;
+classifier.dev declara que no almacena el texto. La redacción es por regex: reduce el
+riesgo, no es un anonimizador completo.
+
+## Límites
+
+- La confianza de classifier.dev es una previsión de que la etiqueta sea correcta, no una
+  medida de si el ticket encaja en la taxonomía.
+- El tier gratuito permite 3.000 clasificaciones por minuto y 20.000 al día por IP; un
+  ticket consume dos. El CSV acepta hasta 5.000 filas para no agotar la cuota.
+- El índice es una métrica editorial del proyecto, no un dato oficial de ninguna
+  herramienta de helpdesk.
+- El modo demo genera datos sintéticos y clasificación simulada; no representa a ninguna
+  organización.
+
+## Deploy
+
+Importa el repositorio en Vercel tal cual. No hay secretos que configurar. En Vercel, la
+API route usa el runtime de Node y un límite de 60 segundos (`maxDuration`), suficiente
+porque cada request reenvía un solo lote de hasta 1000 textos.

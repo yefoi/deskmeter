@@ -1,0 +1,17 @@
+fecha,asunto,descripcion,estado,prioridad,tiempo_resolucion_horas
+02/09/2026,La impresora de planta 2 no imprime,"Los trabajos se quedan en cola. Podéis avisarme en ana.perez@empresa.es o al 612 345 678.",cerrado,alta,4.5
+02/09/2026,No arranca el portátil tras la actualización,Se apagó a mitad de la actualización y no pasa del logo. Necesito los archivos del escritorio.,cerrado,urgente,6
+03/09/2026,Toda la oficina sin internet,"El router muestra luz roja y nadie puede navegar. Atendemos clientes por teléfono, es urgente.",cerrado,urgente,2
+03/09/2026,Contraseña caducada,Me pide cambiarla pero la nueva no cumple los requisitos y no me dice cuáles.,cerrado,media,3
+04/09/2026,Error al exportar el informe mensual,Aparece un error inesperado y la aplicación se cierra desde la última actualización.,cerrado,alta,12
+04/09/2026,Alta de usuario para la incorporación del lunes,Necesita correo y acceso a la carpeta de proyectos. DNI 12345678Z para el contrato.,abierto,media,
+05/09/2026,Factura duplicada de agosto,Nos ha llegado dos veces la factura del soporte. Adjunto referencias 8841 y 8842.,cerrado,media,1.5
+05/09/2026,La VPN se cae cada pocos minutos,Al trabajar desde casa tengo que reconectar constantemente. Con cable va algo mejor.,en_progreso,alta,
+08/09/2026,El correo no sincroniza en el móvil,Desde ayer no recibo correo en el teléfono aunque en el ordenador sí.,cerrado,baja,20
+09/09/2026,La aplicación de facturación va lenta,Las pantallas tardan más de un minuto en cargar desde hace unos días.,cerrado,normal,30
+10/09/2026,Permisos en la carpeta de dirección,Me he cambiado de departamento y necesito lectura para los informes trimestrales.,cerrado,baja,26
+11/09/2026,Cambio de datos de facturación,Hemos cambiado el CIF y la dirección fiscal. Llamadme al 954 12 34 56.,cerrado,normal,8
+12/09/2026,Exportar datos del CRM a Excel,No encuentro la opción de exportar la lista de clientes completa.,abierto,bajo,
+15/09/2026,Teclado del puesto compartido,La recepción solo tiene un teclado y lo usan varias personas al día.,abierto,baja,
+16/09/2026,Segundo monitor parpadea,Con la docking station las pantallas parpadean cada pocos segundos.,en_progreso,normal,
+17/09/2026,Duda sobre el procedimiento de bajas,¿Cuál es el circuito para dar de baja a un usuario que deja la empresa?,cerrado,baja,5
