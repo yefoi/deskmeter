@@ -94,14 +94,20 @@ export default function Deskmeter() {
       });
 
       try {
-        const clasificados = await clasificarTickets(resultado.tickets, {
+        const clasificado = await clasificarTickets(resultado.tickets, {
           tier,
           idioma,
           signal: control.signal,
           alProgreso: (hechos, total, fase) =>
             setProgreso({ hechos, total, fase }),
         });
-        setTickets(clasificados);
+        setTickets(clasificado.tickets);
+        if (clasificado.repetidos > 0) {
+          const mensaje = t.deskmeter.repetidosReutilizados(
+            clasificado.repetidos,
+          );
+          setAviso((actual) => (actual ? `${actual} ${mensaje}` : mensaje));
+        }
       } catch (fallo) {
         if (fallo instanceof DOMException && fallo.name === "AbortError") {
           setAviso(t.deskmeter.cancelado);

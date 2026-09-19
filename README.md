@@ -91,7 +91,10 @@ Cada ticket se clasifica en dos pasadas independientes:
 El texto que se envía es asunto + descripción, redactado y truncado. Las peticiones se
 agrupan en lotes de hasta 1000 (el máximo de la API) con dos en paralelo, y se
 reintentan los 429 respetando `Retry-After` y los fallos 5xx con espera exponencial.
-De cada respuesta se guarda la etiqueta y su confianza calibrada.
+De cada respuesta se guarda la etiqueta y su confianza calibrada. Antes de clasificar,
+los textos idénticos se deduplican: cada texto se clasifica una sola vez y todos los
+tickets con ese mismo texto comparten etiqueta y confianza, de modo que un duplicado del
+export nunca aparece con dos clasificaciones distintas (y no consume cuota extra).
 
 Un ticket se marca para **revisión manual** cuando la confianza de cualquiera de las dos
 dimensiones es menor que `0.7`, cuando llega como `null` (texto que no parece lenguaje

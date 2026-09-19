@@ -215,10 +215,17 @@ export function componerTicket(
   };
 }
 
+export interface ResultadoClasificacionTickets {
+  tickets: Ticket[];
+  total: number;
+  unicos: number;
+  repetidos: number;
+}
+
 export async function clasificarTickets(
   tickets: TicketCrudo[],
   opciones: OpcionesClasificacion = {},
-): Promise<Ticket[]> {
+): Promise<ResultadoClasificacionTickets> {
   const {
     tier = "fast",
     idioma = "es",
@@ -228,12 +235,28 @@ export async function clasificarTickets(
     alProgreso,
   } = opciones;
 
-  if (tickets.length === 0) return [];
+  if (tickets.length === 0) {
+    return { tickets: [], total: 0, unicos: 0, repetidos: 0 };
+  }
 
   const textos = tickets.map((ticket) =>
     textoClasificable(ticket.asunto, ticket.descripcion, undefined, idioma),
   );
-  const total = tickets.length * 2;
+
+  const indicePorTexto = new Map<string, number>();
+  const unicos: string[] = [];
+  const mapeo: number[] = [];
+  for (const texto of textos) {
+    let indice = indicePorTexto.get(texto);
+    if (indice === undefined) {
+      indice = unicos.length;
+      indicePorTexto.set(texto, indice);
+      unicos.push(texto);
+    }
+    mapeo.push(indice);
+  }
+
+  const total = unicos.length * 2;
   let hechos = 0;
   const resultados: Record<Dimension, ResultadoClasificacion[]> = {
     categoria: [],
@@ -241,7 +264,7 @@ export async function clasificarTickets(
   };
 
   for (const dimension of ["categoria", "urgencia"] as const) {
-    const lotes = dividirEnLotes(textos, loteMaximo);
+    const lotes = dividirEnLotes(unicos, loteMaximo);
     const porLote = await enParalelo(lotes, concurrencia, async (lote) => {
       const clasificaciones = await conReintentos(
         () => clasificarLote(lote, dimension, tier, idioma, signal),
@@ -254,13 +277,18 @@ export async function clasificarTickets(
     resultados[dimension] = porLote.flat();
   }
 
-  return tickets.map((ticket, indice) =>
-    componerTicket(
-      ticket,
-      resultados.categoria[indice],
-      resultados.urgencia[indice],
-      textos[indice],
-      idioma,
+  return {
+    tickets: tickets.map((ticket, indice) =>
+      componerTicket(
+        ticket,
+        resultados.categoria[mapeo[indice]],
+        resultados.urgencia[mapeo[indice]],
+        textos[indice],
+        idioma,
+      ),
     ),
-  );
+    total: tickets.length,
+    unicos: unicos.length,
+    repetidos: tickets.length - unicos.length,
+  };
 }

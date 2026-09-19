@@ -36,6 +36,15 @@ describe("generarTicketsDemo", () => {
     ).toBe(true);
   });
 
+  it("no repite textos exactos entre tickets demo", () => {
+    const tickets = generarTicketsDemo(180, new Date(2026, 8, 18));
+    const textos = new Set(tickets.map((ticket) => ticket.textoRedactado));
+    expect(textos.size).toBe(tickets.length);
+    expect(
+      tickets.every((ticket) => /Ref\. INC-\d{4}\./.test(ticket.descripcion)),
+    ).toBe(true);
+  });
+
   it("genera la demo en inglés con etiquetas válidas", () => {
     const tickets = generarTicketsDemo(60, new Date(2026, 8, 18), "en");
     expect(

@@ -179,6 +179,13 @@ export default function Page() {
             confidence and takes longer. Each pass keeps the chosen label and
             its calibrated confidence.
           </p>
+          <p className="mt-2">
+            Before classifying, identical redacted texts are deduplicated: each
+            text is sent only once and every ticket carrying that same text
+            shares its label and confidence. A duplicate in the export can
+            therefore never show up with two different classifications, and the
+            classifier quota goes further.
+          </p>
         </div>
 
         <div>

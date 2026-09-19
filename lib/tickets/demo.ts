@@ -281,6 +281,29 @@ const FRAGMENTOS_PII: Record<Idioma, string[]> = {
   ],
 };
 
+const DETALLES: Record<Idioma, string[]> = {
+  es: [
+    "Afecta solo a mi puesto.",
+    "Le pasa a más gente del equipo.",
+    "Llevo así desde ayer.",
+    "Es la segunda vez esta semana.",
+    "He probado a reiniciar sin éxito.",
+    "Adjunto captura por si ayuda.",
+    "Está bloqueando tareas del equipo.",
+    "No corre prisa, pero quiero resolverlo.",
+  ],
+  en: [
+    "It only affects my desk.",
+    "More people on the team have the same issue.",
+    "It has been like this since yesterday.",
+    "It is the second time this week.",
+    "I tried restarting with no luck.",
+    "I am attaching a screenshot in case it helps.",
+    "It is blocking team tasks.",
+    "It is not urgent, but I would like it fixed.",
+  ],
+};
+
 const PRIORIDAD: Record<Idioma, Record<Urgencia, string>> = {
   es: { critico: "urgente", alto: "alta", normal: "media", bajo: "baja" },
   en: { critico: "urgent", alto: "high", normal: "medium", bajo: "low" },
@@ -299,6 +322,15 @@ function prng(semilla: number): () => number {
     valor = (valor + Math.imul(valor ^ (valor >>> 7), 61 | valor)) ^ valor;
     return ((valor ^ (valor >>> 14)) >>> 0) / 4294967296;
   };
+}
+
+function hashTexto(texto: string): number {
+  let hash = 2166136261;
+  for (let indice = 0; indice < texto.length; indice++) {
+    hash ^= texto.charCodeAt(indice);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }
 
 function elegir<T>(opciones: [T, number][], valor: number): T {
@@ -343,6 +375,7 @@ export function generarTicketsDemo(
   );
   const plantillas = PLANTILLAS[idioma];
   const fragmentos = FRAGMENTOS_PII[idioma];
+  const detalles = DETALLES[idioma];
   const estados = ESTADOS[idioma];
 
   for (let indice = 0; indice < cantidad; indice++) {
@@ -356,14 +389,26 @@ export function generarTicketsDemo(
     );
 
     const categoria = elegir(CATEGORIAS_PESO, aleatorio());
-    const urgencia = elegir(URGENCIAS_POR_CATEGORIA[categoria], aleatorio());
     const opciones = plantillas[categoria];
     const plantilla = opciones[Math.floor(aleatorio() * opciones.length)];
+    const detalle = detalles[Math.floor(aleatorio() * detalles.length)];
+    const referencia = `Ref. INC-${String(indice + 1).padStart(4, "0")}.`;
 
-    let descripcion = plantilla.descripcion;
+    let descripcion = `${plantilla.descripcion} ${detalle} ${referencia}`;
     if (aleatorio() < 0.16) {
       descripcion += fragmentos[Math.floor(aleatorio() * fragmentos.length)];
     }
+
+    const textoRedactado = textoClasificable(
+      plantilla.asunto,
+      descripcion,
+      undefined,
+      idioma,
+    );
+    const clasificacion = prng(hashTexto(`${idioma}|${textoRedactado}`));
+    const urgencia = elegir(URGENCIAS_POR_CATEGORIA[categoria], clasificacion());
+    const confianzaCategoria = confianza(clasificacion);
+    const confianzaUrgencia = confianza(clasificacion);
 
     const resuelto = aleatorio() < 0.78;
     const crudo: TicketCrudo = {
@@ -387,13 +432,13 @@ export function generarTicketsDemo(
         crudo,
         {
           etiqueta: promptsCategoria.get(categoria) ?? categoria,
-          confianza: confianza(aleatorio),
+          confianza: confianzaCategoria,
         },
         {
           etiqueta: promptsUrgencia.get(urgencia) ?? urgencia,
-          confianza: confianza(aleatorio),
+          confianza: confianzaUrgencia,
         },
-        textoClasificable(crudo.asunto, crudo.descripcion, undefined, idioma),
+        textoRedactado,
         idioma,
       ),
     );

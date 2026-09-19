@@ -84,6 +84,8 @@ const TEXTOS_ES = {
     errorSinFilas: "No hay filas con una fecha válida en el CSV.",
     errorClasificar: "No se pudo clasificar el CSV.",
     errorExcel: "No se pudo leer el archivo de Excel (.xlsx).",
+    repetidosReutilizados: (cantidad: number) =>
+      `${cantidad} ticket(s) con texto idéntico comparten la clasificación de su texto.`,
     filasDescartadas: (cantidad: number) =>
       `${cantidad} fila(s) descartada(s) por fecha no válida.`,
     cancelado: "Proceso cancelado.",
@@ -345,6 +347,8 @@ const TEXTOS_EN: Textos = {
     errorSinFilas: "There are no rows with a valid date in the CSV.",
     errorClasificar: "The CSV could not be classified.",
     errorExcel: "The Excel file (.xlsx) could not be read.",
+    repetidosReutilizados: (cantidad: number) =>
+      `${cantidad} ticket(s) with identical text share the classification of their text.`,
     filasDescartadas: (cantidad: number) =>
       `${cantidad} row(s) dropped for an invalid date.`,
     cancelado: "Process cancelled.",

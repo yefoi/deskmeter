@@ -178,6 +178,13 @@ export default function Page() {
             por debajo de 0,7 y tarda más. De cada pasada se guarda la etiqueta
             elegida y su confianza calibrada.
           </p>
+          <p className="mt-2">
+            Antes de clasificar, los textos redactados idénticos se deduplican:
+            cada texto se envía una sola vez y todos los tickets con ese mismo
+            texto comparten etiqueta y confianza. Así un duplicado del export
+            nunca aparece con dos clasificaciones distintas y la cuota del
+            clasificador se aprovecha mejor.
+          </p>
         </div>
 
         <div>
