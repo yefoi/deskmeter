@@ -6,6 +6,7 @@ import {
   calcularResumen,
   mapaCalorCategorias,
 } from "@/lib/tickets/agregar";
+import { descripcionPeriodo } from "@/lib/tickets/fechas";
 import { indicesPorPeriodo } from "@/lib/tickets/indice";
 import type { Granularidad, Ticket } from "@/lib/tickets/tipos";
 import Histograma from "./Histograma";
@@ -56,10 +57,12 @@ export default function PanelResultados({
 
   const datosTendencia = agregados.map((agregado) => ({
     etiqueta: agregado.etiqueta,
+    descripcion: descripcionPeriodo(agregado.periodo, granularidad),
     valor: indices.get(agregado.periodo)?.valor ?? 0,
   }));
   const datosHistograma = agregados.map((agregado) => ({
     etiqueta: agregado.etiqueta,
+    descripcion: descripcionPeriodo(agregado.periodo, granularidad),
     ...agregado.porCategoria,
   }));
 
@@ -70,7 +73,7 @@ export default function PanelResultados({
       : `Fuente: ${nombreArchivo ?? "CSV"} · ${tickets.length} tickets clasificados con classifier.dev.`;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="aparecer flex flex-col gap-6 pb-20 sm:pb-0">
       <section className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -78,7 +81,7 @@ export default function PanelResultados({
           </h1>
           <p className="mt-1 text-sm text-foreground/60">{descripcionFuente}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="no-imprimir flex flex-wrap items-center gap-2">
           <SelectorGranularidad
             granularidad={granularidad}
             onCambio={setGranularidad}
@@ -106,20 +109,21 @@ export default function PanelResultados({
         periodo={ultimo?.etiqueta ?? "—"}
         granularidad={granularidad}
         periodos={agregados.length}
+        serie={datosTendencia.map((punto) => punto.valor)}
       />
 
-      <section className="rounded-xl border border-borde bg-panel p-4 sm:p-5">
+      <section className="panel-imprimible rounded-xl border border-borde bg-panel p-4 sm:p-5">
         <h2 className="text-base font-semibold">
           Tendencia del índice de salud
         </h2>
         <p className="mb-4 text-xs text-foreground/60">
-          0 = peor salud, 100 = mejor. Cada punto es un{nombrePeriodo === "mes" ? "" : "a"}{" "}
-          {nombrePeriodo}.
+          0 = peor salud, 100 = mejor. Cada punto es un
+          {nombrePeriodo === "mes" ? "" : "a"} {nombrePeriodo}.
         </p>
         <Tendencia datos={datosTendencia} />
       </section>
 
-      <section className="rounded-xl border border-borde bg-panel p-4 sm:p-5">
+      <section className="panel-imprimible rounded-xl border border-borde bg-panel p-4 sm:p-5">
         <h2 className="text-base font-semibold">
           Mapa de calor: categoría × {nombrePeriodo}
         </h2>
@@ -130,7 +134,7 @@ export default function PanelResultados({
         <MapaCalor mapa={calor} granularidad={granularidad} />
       </section>
 
-      <section className="rounded-xl border border-borde bg-panel p-4 sm:p-5">
+      <section className="panel-imprimible rounded-xl border border-borde bg-panel p-4 sm:p-5">
         <h2 className="text-base font-semibold">
           Histograma de tickets por categoría
         </h2>
@@ -140,7 +144,7 @@ export default function PanelResultados({
         <Histograma datos={datosHistograma} />
       </section>
 
-      <section className="rounded-xl border border-borde bg-panel p-4 sm:p-5">
+      <section className="panel-imprimible rounded-xl border border-borde bg-panel p-4 sm:p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-base font-semibold">Revisión manual</h2>
           <p className="text-xs text-foreground/60">
@@ -153,6 +157,16 @@ export default function PanelResultados({
         </p>
         <TablaRevision tickets={revision} />
       </section>
+
+      <div className="no-imprimir fixed inset-x-0 bottom-0 z-30 border-t border-borde bg-panel/95 p-3 backdrop-blur sm:hidden">
+        <button
+          type="button"
+          onClick={onReiniciar}
+          className="w-full rounded-lg bg-acento px-4 py-2.5 text-sm font-medium text-background"
+        >
+          Procesar otro CSV
+        </button>
+      </div>
     </div>
   );
 }

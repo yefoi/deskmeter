@@ -5,20 +5,16 @@ import { clasificarTickets } from "@/lib/tickets/clasificar";
 import { parsearCsv } from "@/lib/tickets/csv";
 import { generarTicketsDemo } from "@/lib/tickets/demo";
 import type { Ticket, Tier } from "@/lib/tickets/tipos";
+import EsqueletoPanel from "./EsqueletoPanel";
 import PanelResultados from "./PanelResultados";
+import Progreso, { type EstadoProgreso } from "./Progreso";
 import Subidor from "./Subidor";
-
-interface Progreso {
-  hechos: number;
-  total: number;
-  fase: string;
-}
 
 export default function Deskmeter() {
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
   const [fuente, setFuente] = useState<"demo" | "csv" | null>(null);
   const [nombreArchivo, setNombreArchivo] = useState<string | null>(null);
-  const [progreso, setProgreso] = useState<Progreso | null>(null);
+  const [progreso, setProgreso] = useState<EstadoProgreso | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [tier, setTier] = useState<Tier>("fast");
@@ -86,11 +82,7 @@ export default function Deskmeter() {
           tier,
           signal: control.signal,
           alProgreso: (hechos, total, fase) =>
-            setProgreso({
-              hechos,
-              total,
-              fase: fase === "categoria" ? "categoría" : "urgencia",
-            }),
+            setProgreso({ hechos, total, fase }),
         });
         setTickets(clasificados);
       } catch (fallo) {
@@ -142,46 +134,10 @@ export default function Deskmeter() {
             onTier={setTier}
           />
           {progreso && (
-            <section
-              aria-live="polite"
-              className="rounded-xl border border-borde bg-panel p-5"
-            >
-              <div className="flex items-center justify-between gap-4 text-sm">
-                <p>
-                  {progreso.fase === "preparando"
-                    ? "Preparando el texto de los tickets…"
-                    : `Clasificando ${progreso.fase} con classifier.dev…`}
-                </p>
-                <p className="font-mono text-xs text-foreground/60">
-                  {progreso.hechos} / {progreso.total}
-                </p>
-              </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-panel-suave">
-                <div
-                  className="h-full rounded-full bg-acento transition-all"
-                  style={{
-                    width: `${
-                      progreso.total > 0
-                        ? Math.round((progreso.hechos / progreso.total) * 100)
-                        : 0
-                    }%`,
-                  }}
-                />
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-4">
-                <p className="text-xs text-foreground/60">
-                  Dos pasadas por lote, hasta 1000 tickets por petición. No
-                  cierres la pestaña.
-                </p>
-                <button
-                  type="button"
-                  onClick={cancelar}
-                  className="rounded-md border border-borde px-3 py-1.5 text-xs transition hover:bg-panel-suave"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </section>
+            <div className="aparecer flex flex-col gap-6">
+              <Progreso estado={progreso} onCancelar={cancelar} />
+              <EsqueletoPanel />
+            </div>
           )}
           {error && (
             <p className="rounded-xl border border-peligro/40 bg-peligro/10 px-4 py-3 text-sm text-peligro">
@@ -193,7 +149,7 @@ export default function Deskmeter() {
               {aviso}
             </p>
           )}
-          <ComoFunciona />
+          {!progreso && <ComoFunciona />}
         </div>
       )}
     </main>
