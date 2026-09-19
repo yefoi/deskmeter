@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { SECTORES, type Sector } from "@/lib/tickets/sectores";
 import type { Tier } from "@/lib/tickets/tipos";
 import { useIdioma } from "./idioma";
 import VistaPrevia from "./VistaPrevia";
@@ -11,6 +12,8 @@ interface Props {
   procesando: boolean;
   tier: Tier;
   onTier: (tier: Tier) => void;
+  sector: Sector;
+  onSector: (sector: Sector) => void;
 }
 
 export default function Subidor({
@@ -19,6 +22,8 @@ export default function Subidor({
   procesando,
   tier,
   onTier,
+  sector,
+  onSector,
 }: Props) {
   const { idioma, t } = useIdioma();
   const [arrastrando, setArrastrando] = useState(false);
@@ -155,6 +160,23 @@ export default function Subidor({
               ))}
             </div>
             <span className="text-foreground/50">{t.subidor.tierAyuda}</span>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+            <span className="text-foreground/60">{t.subidor.sector}</span>
+            <select
+              value={sector}
+              disabled={procesando}
+              onChange={(evento) => onSector(evento.target.value as Sector)}
+              className="rounded-lg border border-borde bg-background px-3 py-1.5 text-sm outline-none transition focus:border-acento disabled:opacity-50"
+            >
+              {SECTORES.map((opcion) => (
+                <option key={opcion} value={opcion}>
+                  {t.subidor.sectores[opcion]}
+                </option>
+              ))}
+            </select>
+            <span className="text-foreground/50">{t.subidor.sectorAyuda}</span>
           </div>
 
           <p className="mt-4 text-xs leading-relaxed text-foreground/60">

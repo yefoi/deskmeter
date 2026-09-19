@@ -183,7 +183,9 @@ export default function Page() {
             cada texto se envía una sola vez y todos los tickets con ese mismo
             texto comparten etiqueta y confianza. Así un duplicado del export
             nunca aparece con dos clasificaciones distintas y la cuota del
-            clasificador se aprovecha mejor.
+            clasificador se aprovecha mejor. El criterio de urgencia se puede
+            afinar por sector (clínica o salud, comercio con TPV, colegio o
+            educación) con instrucciones propias enviadas en cada petición.
           </p>
         </div>
 
@@ -212,7 +214,9 @@ export default function Page() {
             tickets por categoría, el porcentaje de críticos y altos, el
             porcentaje en revisión manual y el tiempo medio de resolución (solo
             si la columna existe; la media se hace sobre los tickets que traen
-            valor).
+            valor). La portada permite además subir un segundo CSV y comparar
+            el índice del último periodo, el volumen, la urgencia, la revisión
+            y el tiempo entre ambos archivos, con la variación de cada métrica.
           </p>
         </div>
 

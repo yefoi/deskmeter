@@ -27,6 +27,14 @@ const TEXTOS_ES = {
     tier: "Tier de clasificación",
     tierAyuda:
       "fast responde en una pasada; smart vuelve a preguntar lo dudoso y tarda más.",
+    sector: "Sector",
+    sectores: {
+      general: "General",
+      clinica: "Clínica / salud",
+      comercio: "Comercio con TPV",
+      colegio: "Colegio / educación",
+    },
+    sectorAyuda: "Las instrucciones de urgencia se afinan al sector.",
     privacidad:
       "El CSV se procesa en tu navegador. Solo sale hacia classifier.dev el texto redactado de cada ticket (correos, teléfonos y DNI/NIE sustituidos antes de enviar). Nada se guarda en el servidor.",
   },
@@ -112,6 +120,8 @@ const TEXTOS_ES = {
     fuenteDemo: "Datos demo generados en local con clasificación simulada.",
     fuenteCsv: (nombre: string, total: number) =>
       `Fuente: ${nombre} · ${total} tickets clasificados con classifier.dev.`,
+    modelo: (modelo: string, tier: string) =>
+      `Clasificado con ${modelo} (tier ${tier}).`,
     procesarOtro: "Procesar otro CSV",
     semana: "semana",
     mes: "mes",
@@ -185,6 +195,32 @@ const TEXTOS_ES = {
       `Se muestran ${limite} de ${total} tickets en revisión.`,
     ninguna: "Ningún ticket necesita revisión manual.",
     motivos: { categoria: "categoría", urgencia: "urgencia", union: " y " },
+  },
+  comparar: {
+    titulo: "Comparar con otro CSV",
+    intro:
+      "Sube un segundo export (por ejemplo, el periodo anterior) y compara índice, volumen, urgencia, revisión y tiempo.",
+    boton: "Elegir CSV a comparar",
+    cargando: "Clasificando el CSV de comparación…",
+    quitar: "Quitar comparación",
+    error: "No se pudo procesar el CSV de comparación.",
+    actual: (nombre: string) => `Actual: ${nombre}`,
+    anterior: (nombre: string) => `Anterior: ${nombre}`,
+    columnas: {
+      metrica: "Métrica",
+      anterior: "Anterior",
+      actual: "Actual",
+      variacion: "Variación",
+    },
+    filas: {
+      indice: "Índice de salud (último periodo)",
+      tickets: "Tickets",
+      criticos: "Críticos / altos",
+      revision: "Revisión manual",
+      tiempo: "Tiempo medio",
+    },
+    categorias: "Tickets por categoría",
+    sinDato: "—",
   },
   porQue: {
     kicker: "La diferencia está en la forma",
@@ -291,6 +327,14 @@ const TEXTOS_EN: Textos = {
     tier: "Classification tier",
     tierAyuda:
       "fast answers in a single pass; smart re-asks the doubtful ones and takes longer.",
+    sector: "Sector",
+    sectores: {
+      general: "General",
+      clinica: "Clinic / healthcare",
+      comercio: "Retail with POS",
+      colegio: "School / education",
+    },
+    sectorAyuda: "Urgency instructions are tuned to the sector.",
     privacidad:
       "The CSV is processed in your browser. Only the redacted text of each ticket leaves towards classifier.dev (emails, phones and ID numbers replaced before sending). Nothing is stored on the server.",
   },
@@ -375,6 +419,8 @@ const TEXTOS_EN: Textos = {
     fuenteDemo: "Demo data generated locally with simulated classification.",
     fuenteCsv: (nombre: string, total: number) =>
       `Source: ${nombre} · ${total} tickets classified with classifier.dev.`,
+    modelo: (modelo: string, tier: string) =>
+      `Classified with ${modelo} (tier ${tier}).`,
     procesarOtro: "Process another CSV",
     semana: "week",
     mes: "month",
@@ -448,6 +494,32 @@ const TEXTOS_EN: Textos = {
       `Showing ${limite} of ${total} tickets in review.`,
     ninguna: "No ticket needs manual review.",
     motivos: { categoria: "category", urgencia: "urgency", union: " and " },
+  },
+  comparar: {
+    titulo: "Compare with another CSV",
+    intro:
+      "Upload a second export (for instance, the previous period) and compare index, volume, urgency, review and time.",
+    boton: "Choose CSV to compare",
+    cargando: "Classifying the comparison CSV…",
+    quitar: "Remove comparison",
+    error: "The comparison CSV could not be processed.",
+    actual: (nombre: string) => `Current: ${nombre}`,
+    anterior: (nombre: string) => `Previous: ${nombre}`,
+    columnas: {
+      metrica: "Metric",
+      anterior: "Previous",
+      actual: "Current",
+      variacion: "Change",
+    },
+    filas: {
+      indice: "Health index (last period)",
+      tickets: "Tickets",
+      criticos: "Critical / high",
+      revision: "Manual review",
+      tiempo: "Average time",
+    },
+    categorias: "Tickets per category",
+    sinDato: "—",
   },
   porQue: {
     kicker: "The difference is in the form",

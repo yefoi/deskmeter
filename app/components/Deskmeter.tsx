@@ -9,6 +9,7 @@ import {
 } from "@/lib/tickets/csv";
 import { generarTicketsDemo } from "@/lib/tickets/demo";
 import { excelACsv } from "@/lib/tickets/excel";
+import type { Sector } from "@/lib/tickets/sectores";
 import type { Ticket, Tier } from "@/lib/tickets/tipos";
 import EsqueletoPanel from "./EsqueletoPanel";
 import { useIdioma } from "./idioma";
@@ -30,10 +31,23 @@ export default function Deskmeter() {
   const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [tier, setTier] = useState<Tier>("fast");
+  const [sector, setSector] = useState<Sector>("general");
+  const [modelos, setModelos] = useState<string[]>([]);
+  const [comparacion, setComparacion] = useState<{
+    tickets: Ticket[];
+    nombre: string;
+  } | null>(null);
+  const [progresoComparacion, setProgresoComparacion] = useState<{
+    hechos: number;
+    total: number;
+  } | null>(null);
+  const [errorComparacion, setErrorComparacion] = useState<string | null>(null);
   const controlador = useRef<AbortController | null>(null);
+  const controladorComparacion = useRef<AbortController | null>(null);
 
   const cargarDemo = useCallback(() => {
     controlador.current?.abort();
+    controladorComparacion.current?.abort();
     setTickets(generarTicketsDemo(180, new Date(), idioma));
     setFuente("demo");
     setNombreArchivo(null);
@@ -41,17 +55,26 @@ export default function Deskmeter() {
     setMapeoPendiente(null);
     setError(null);
     setAviso(null);
+    setModelos([]);
+    setComparacion(null);
+    setProgresoComparacion(null);
+    setErrorComparacion(null);
   }, [idioma]);
 
   const procesarTexto = useCallback(
     async (texto: string, nombre: string, mapeo?: Mapeo) => {
       controlador.current?.abort();
+      controladorComparacion.current?.abort();
       setTickets(null);
       setFuente(null);
       setNombreArchivo(null);
       setProgreso(null);
       setError(null);
       setAviso(null);
+      setModelos([]);
+      setComparacion(null);
+      setProgresoComparacion(null);
+      setErrorComparacion(null);
 
       const resultado = parsearCsv(texto, LIMITE_FILAS, idioma, mapeo);
 
@@ -97,11 +120,13 @@ export default function Deskmeter() {
         const clasificado = await clasificarTickets(resultado.tickets, {
           tier,
           idioma,
+          sector,
           signal: control.signal,
           alProgreso: (hechos, total, fase) =>
             setProgreso({ hechos, total, fase }),
         });
         setTickets(clasificado.tickets);
+        setModelos(clasificado.modelos);
         if (clasificado.repetidos > 0) {
           const mensaje = t.deskmeter.repetidosReutilizados(
             clasificado.repetidos,
@@ -121,7 +146,7 @@ export default function Deskmeter() {
         controlador.current = null;
       }
     },
-    [idioma, t, tier],
+    [idioma, t, tier, sector],
   );
 
   const procesarArchivo = useCallback(
@@ -162,14 +187,90 @@ export default function Deskmeter() {
 
   const cancelar = () => controlador.current?.abort();
 
+  const compararArchivo = useCallback(
+    async (archivo: File) => {
+      controladorComparacion.current?.abort();
+      setErrorComparacion(null);
+      setComparacion(null);
+
+      const esExcel =
+        /\.xlsx$/i.test(archivo.name) ||
+        archivo.type.includes("spreadsheetml");
+
+      let texto: string;
+      if (esExcel) {
+        try {
+          texto = await excelACsv(archivo);
+        } catch {
+          setErrorComparacion(t.deskmeter.errorExcel);
+          return;
+        }
+      } else {
+        try {
+          texto = await archivo.text();
+        } catch {
+          setErrorComparacion(t.deskmeter.errorLectura);
+          return;
+        }
+      }
+
+      const resultado = parsearCsv(texto, LIMITE_FILAS, idioma);
+      if (resultado.columnasFaltantes.length > 0 || resultado.tickets.length === 0) {
+        setErrorComparacion(resultado.errores[0] ?? t.comparar.error);
+        return;
+      }
+
+      const control = new AbortController();
+      controladorComparacion.current = control;
+      setProgresoComparacion({
+        hechos: 0,
+        total: resultado.tickets.length * 2,
+      });
+
+      try {
+        const clasificado = await clasificarTickets(resultado.tickets, {
+          tier,
+          idioma,
+          sector,
+          signal: control.signal,
+          alProgreso: (hechos, total) =>
+            setProgresoComparacion({ hechos, total }),
+        });
+        setComparacion({ tickets: clasificado.tickets, nombre: archivo.name });
+      } catch (fallo) {
+        if (!(fallo instanceof DOMException && fallo.name === "AbortError")) {
+          setErrorComparacion(
+            fallo instanceof Error ? fallo.message : t.comparar.error,
+          );
+        }
+      } finally {
+        setProgresoComparacion(null);
+        controladorComparacion.current = null;
+      }
+    },
+    [idioma, t, tier, sector],
+  );
+
+  const quitarComparacion = () => {
+    controladorComparacion.current?.abort();
+    setComparacion(null);
+    setProgresoComparacion(null);
+    setErrorComparacion(null);
+  };
+
   const reiniciar = () => {
     controlador.current?.abort();
+    controladorComparacion.current?.abort();
     setTickets(null);
     setFuente(null);
     setNombreArchivo(null);
     setMapeoPendiente(null);
     setAviso(null);
     setError(null);
+    setModelos([]);
+    setComparacion(null);
+    setProgresoComparacion(null);
+    setErrorComparacion(null);
   };
 
   return (
@@ -179,7 +280,14 @@ export default function Deskmeter() {
           tickets={tickets}
           fuente={fuente}
           nombreArchivo={nombreArchivo}
+          modelos={modelos}
+          tier={tier}
           aviso={aviso}
+          comparacion={comparacion}
+          progresoComparacion={progresoComparacion}
+          errorComparacion={errorComparacion}
+          onComparar={compararArchivo}
+          onQuitarComparacion={quitarComparacion}
           onReiniciar={reiniciar}
         />
       ) : (
@@ -197,6 +305,8 @@ export default function Deskmeter() {
               procesando={progreso !== null}
               tier={tier}
               onTier={setTier}
+              sector={sector}
+              onSector={setSector}
             />
           )}
           {progreso && (

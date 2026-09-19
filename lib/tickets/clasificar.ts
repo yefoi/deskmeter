@@ -7,6 +7,7 @@ import {
 } from "./etiquetas";
 import type { Idioma } from "./idioma";
 import { textoClasificable } from "./pii";
+import type { Sector } from "./sectores";
 import { TEXTOS_CLASIFICAR } from "./textos";
 import type {
   Asignacion,
@@ -36,6 +37,7 @@ export class ErrorClasificacion extends Error {
 export interface OpcionesClasificacion {
   tier?: Tier;
   idioma?: Idioma;
+  sector?: Sector;
   loteMaximo?: number;
   concurrencia?: number;
   signal?: AbortSignal;
@@ -93,15 +95,16 @@ async function clasificarLote(
   dimension: Dimension,
   tier: Tier,
   idioma: Idioma,
+  sector: Sector,
   signal?: AbortSignal,
-): Promise<ResultadoClasificacion[]> {
+): Promise<{ resultados: ResultadoClasificacion[]; modelo?: string }> {
   const mensajes = TEXTOS_CLASIFICAR[idioma];
   let respuesta: Response;
   try {
     respuesta = await fetch("/api/clasificar", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ textos, dimension, tier, idioma }),
+      body: JSON.stringify({ textos, dimension, tier, idioma, sector }),
       signal,
     });
   } catch (error) {
@@ -127,11 +130,15 @@ async function clasificarLote(
 
   const cuerpo = (await respuesta.json()) as {
     resultados?: ResultadoClasificacion[];
+    modelo?: unknown;
   };
   if (!Array.isArray(cuerpo.resultados)) {
     throw new ErrorClasificacion(mensajes.inesperada, 502);
   }
-  return cuerpo.resultados;
+  return {
+    resultados: cuerpo.resultados,
+    modelo: typeof cuerpo.modelo === "string" ? cuerpo.modelo : undefined,
+  };
 }
 
 function reintentable(error: unknown): boolean {
@@ -220,6 +227,7 @@ export interface ResultadoClasificacionTickets {
   total: number;
   unicos: number;
   repetidos: number;
+  modelos: string[];
 }
 
 export async function clasificarTickets(
@@ -229,6 +237,7 @@ export async function clasificarTickets(
   const {
     tier = "fast",
     idioma = "es",
+    sector = "general",
     loteMaximo = LOTE_MAXIMO,
     concurrencia = CONCURRENCIA,
     signal,
@@ -236,7 +245,7 @@ export async function clasificarTickets(
   } = opciones;
 
   if (tickets.length === 0) {
-    return { tickets: [], total: 0, unicos: 0, repetidos: 0 };
+    return { tickets: [], total: 0, unicos: 0, repetidos: 0, modelos: [] };
   }
 
   const textos = tickets.map((ticket) =>
@@ -262,19 +271,23 @@ export async function clasificarTickets(
     categoria: [],
     urgencia: [],
   };
+  const modelos = new Set<string>();
 
   for (const dimension of ["categoria", "urgencia"] as const) {
     const lotes = dividirEnLotes(unicos, loteMaximo);
     const porLote = await enParalelo(lotes, concurrencia, async (lote) => {
       const clasificaciones = await conReintentos(
-        () => clasificarLote(lote, dimension, tier, idioma, signal),
+        () => clasificarLote(lote, dimension, tier, idioma, sector, signal),
         signal,
       );
       hechos += lote.length;
       alProgreso?.(hechos, total, dimension);
       return clasificaciones;
     });
-    resultados[dimension] = porLote.flat();
+    resultados[dimension] = porLote.flatMap((lote) => lote.resultados);
+    for (const lote of porLote) {
+      if (lote.modelo) modelos.add(lote.modelo);
+    }
   }
 
   return {
@@ -290,5 +303,6 @@ export async function clasificarTickets(
     total: tickets.length,
     unicos: unicos.length,
     repetidos: tickets.length - unicos.length,
+    modelos: [...modelos],
   };
 }

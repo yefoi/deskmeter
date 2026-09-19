@@ -20,6 +20,12 @@ clasificación de [classifier.dev](https://classifier.dev) (sin API key ni cuent
 - **Visualización**: portada con tendencia del índice, mapa de calor categoría × semana,
   histograma apilado, tabla de tickets en revisión manual y KPI; página `/metodologia`;
   tema claro/oscuro; responsive.
+- **Instrucciones por sector**: además del criterio general, la urgencia se afina con
+  instrucciones propias para clínica/salud, comercio con TPV y colegio/educación
+  (`lib/tickets/sectores.ts`), algo que un modelo genérico no hace.
+- **Comparador de dos periodos**: la portada permite subir un segundo CSV (por ejemplo, el
+  periodo anterior) y compara índice del último periodo, volumen, urgencia, revisión y
+  tiempo entre ambos archivos, con la variación de cada métrica.
 - **Bilingüe**: la interfaz está en español (`/`, `/metodologia`) e inglés (`/en`,
   `/en/methodology`), con conmutador en la cabecera, `<html lang>` y metadatos propios por
   versión. Los textos viven en `lib/tickets/textos.ts` y las etiquetas que se envían al
@@ -51,7 +57,10 @@ También se aceptan hojas de Excel (`.xlsx`), convertidas a CSV en el navegador 
 `read-excel-file` mediante import dinámico (no pesa en la carga inicial). Y cuando la
 detección automática no basta, aparece el **mapeo manual de columnas**: una pantalla que
 muestra los encabezados y las primeras filas del archivo para asignar a mano fecha,
-asunto, descripción y los campos opcionales antes de clasificar.
+asunto, descripción y los campos opcionales antes de clasificar. Hay tests con
+exportaciones reales de GLPI (`Título`, `Descripción`, `Fecha de apertura`, `Estado`,
+`Prioridad`, `Tiempo de resolución`) y OTRS (`Title`, `Description`, `State`, `Priority`,
+`Created`).
 
 ## SEO
 
@@ -95,7 +104,9 @@ reintentan los 429 respetando `Retry-After` y los fallos 5xx con espera exponenc
 De cada respuesta se guarda la etiqueta y su confianza calibrada. Antes de clasificar,
 los textos idénticos se deduplican: cada texto se clasifica una sola vez y todos los
 tickets con ese mismo texto comparten etiqueta y confianza, de modo que un duplicado del
-export nunca aparece con dos clasificaciones distintas (y no consume cuota extra).
+export nunca aparece con dos clasificaciones distintas (y no consume cuota extra). Para
+la urgencia, el parámetro `instructions` de classifier.dev se adapta al sector elegido
+(general, clínica, comercio con TPV o colegio).
 
 Un ticket se marca para **revisión manual** cuando la confianza de cualquiera de las dos
 dimensiones es menor que `0.7`, cuando llega como `null` (texto que no parece lenguaje

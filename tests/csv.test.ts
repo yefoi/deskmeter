@@ -172,6 +172,26 @@ Algo falla;2026-09-01;Detalle del problema
     expect(resultado.tickets[0].prioridad).toBe("high");
   });
 
+  it("lee exportaciones de GLPI y OTRS", () => {
+    const glpi = `Título;Descripción;Fecha de apertura;Estado;Prioridad;Tiempo de resolución
+La impresora no imprime;Se atasca la cola;18/09/2026;En curso;Alta;4,5
+`;
+    const resultadoGlpi = parsearCsv(glpi);
+    expect(resultadoGlpi.columnasFaltantes).toEqual([]);
+    expect(resultadoGlpi.tickets[0].asunto).toBe("La impresora no imprime");
+    expect(resultadoGlpi.tickets[0].estado).toBe("En curso");
+    expect(resultadoGlpi.tickets[0].tiempoResolucionHoras).toBe(4.5);
+
+    const otrs = `Ticket Number,Title,Description,State,Priority,Created
+2026091810001,VPN down,"Cannot connect from home",open,high,"2026-09-18 10:00:00"
+`;
+    const resultadoOtrs = parsearCsv(otrs, undefined, "en");
+    expect(resultadoOtrs.columnasFaltantes).toEqual([]);
+    expect(resultadoOtrs.tickets[0].asunto).toBe("VPN down");
+    expect(resultadoOtrs.tickets[0].estado).toBe("open");
+    expect(resultadoOtrs.tickets[0].fecha.getHours()).toBe(10);
+  });
+
   it("lee CSV con separador de punto y coma", () => {
     const csv = `fecha;asunto;descripcion
 18/09/2026;Sin conexión;El router no responde

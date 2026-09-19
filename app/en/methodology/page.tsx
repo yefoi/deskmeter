@@ -184,7 +184,9 @@ export default function Page() {
             text is sent only once and every ticket carrying that same text
             shares its label and confidence. A duplicate in the export can
             therefore never show up with two different classifications, and the
-            classifier quota goes further.
+            classifier quota goes further. The urgency criterion can be tuned
+            by sector (clinic or healthcare, retail with POS, school or
+            education) with its own instructions sent in every request.
           </p>
         </div>
 
@@ -213,7 +215,9 @@ export default function Page() {
             the category histogram, the share of critical and high tickets, the
             share under manual review and the average resolution time (only if
             the column exists; the average uses the tickets that carry a
-            value).
+            value). The dashboard also lets you upload a second CSV and compare
+            the last-period index, volume, urgency, review and time between
+            both files, with the change of each metric.
           </p>
         </div>
 

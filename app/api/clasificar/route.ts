@@ -3,10 +3,10 @@ import {
   etiquetasCategoria,
   etiquetasUrgencia,
   INSTRUCCIONES_CATEGORIA,
-  INSTRUCCIONES_URGENCIA,
 } from "@/lib/tickets/etiquetas";
 import { esIdioma, type Idioma } from "@/lib/tickets/idioma";
 import { LOTE_MAXIMO } from "@/lib/tickets/clasificar";
+import { esSector, instruccionesUrgencia } from "@/lib/tickets/sectores";
 import { TEXTOS_API } from "@/lib/tickets/textos";
 
 export const maxDuration = 60;
@@ -23,6 +23,7 @@ interface CuerpoPeticion {
   dimension?: unknown;
   tier?: unknown;
   idioma?: unknown;
+  sector?: unknown;
 }
 
 export async function POST(request: Request) {
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
   }
 
   const idioma: Idioma = esIdioma(cuerpo.idioma) ? cuerpo.idioma : "es";
+  const sector = esSector(cuerpo.sector) ? cuerpo.sector : "general";
   const mensajes = TEXTOS_API[idioma];
   const textos = Array.isArray(cuerpo.textos) ? cuerpo.textos : [];
   const dimension = cuerpo.dimension;
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
   const instrucciones =
     dimension === "categoria"
       ? INSTRUCCIONES_CATEGORIA[idioma]
-      : INSTRUCCIONES_URGENCIA[idioma];
+      : instruccionesUrgencia(idioma, sector);
 
   let respuesta: Response | undefined;
   for (const ruta of RUTAS_CLASIFICADOR) {

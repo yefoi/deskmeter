@@ -38,6 +38,8 @@ const ALIAS: Record<ColumnaLogica, string[]> = {
     "created_date",
     "created_time",
     "opened_time",
+    "opening_date",
+    "open_date",
   ],
   asunto: [
     "asunto",
@@ -78,6 +80,9 @@ const ALIAS: Record<ColumnaLogica, string[]> = {
     "resolution_time",
     "resolution_time_hours",
     "time_to_resolution",
+    "time_to_solve",
+    "solution_time",
+    "tiempo_de_solucion",
     "full_resolution_time_hours",
   ],
 };
