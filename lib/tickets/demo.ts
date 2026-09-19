@@ -405,7 +405,9 @@ export function generarTicketsDemo(
       undefined,
       idioma,
     );
-    const clasificacion = prng(hashTexto(`${idioma}|${textoRedactado}`));
+    const clasificacion = prng(
+      hashTexto(`${idioma}|${plantilla.asunto}|${plantilla.descripcion}`),
+    );
     const urgencia = elegir(URGENCIAS_POR_CATEGORIA[categoria], clasificacion());
     const confianzaCategoria = confianza(clasificacion);
     const confianzaUrgencia = confianza(clasificacion);

@@ -45,6 +45,24 @@ describe("generarTicketsDemo", () => {
     ).toBe(true);
   });
 
+  it("clasifica igual los tickets del mismo tema aunque cambie el detalle", () => {
+    const tickets = generarTicketsDemo(180, new Date(2026, 8, 18));
+    const porAsunto = new Map<string, (typeof tickets)[number][]>();
+    for (const ticket of tickets) {
+      const grupo = porAsunto.get(ticket.asunto) ?? [];
+      grupo.push(ticket);
+      porAsunto.set(ticket.asunto, grupo);
+    }
+    expect(porAsunto.size).toBeLessThan(tickets.length);
+    for (const grupo of porAsunto.values()) {
+      const referencia = grupo[0];
+      for (const ticket of grupo) {
+        expect(ticket.categoria).toEqual(referencia.categoria);
+        expect(ticket.urgencia).toEqual(referencia.urgencia);
+      }
+    }
+  });
+
   it("genera la demo en inglés con etiquetas válidas", () => {
     const tickets = generarTicketsDemo(60, new Date(2026, 8, 18), "en");
     expect(
