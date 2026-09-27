@@ -42,7 +42,7 @@ const PREGUNTAS = [
   {
     pregunta: "¿Se guardan mis tickets en algún servidor?",
     respuesta:
-      "No. El CSV se procesa en el navegador y desaparece al recargar la página. Solo viaja a classifier.dev el texto redactado de cada ticket, y classifier.dev declara que no lo almacena.",
+      "No. El CSV se procesa en el navegador y no se envía a ningún servidor; la última sesión puede quedar solo en el almacenamiento local de tu navegador y se borra al reiniciar o limpiar los datos del sitio. Solo viaja a classifier.dev el texto redactado de cada ticket, y classifier.dev declara que no lo almacena.",
   },
   {
     pregunta: "¿Cómo se calcula el índice de salud?",
@@ -363,8 +363,11 @@ export default function Page() {
             No hay backend con estado: la API route solo reenvía los textos
             redactados a classifier.dev y devuelve la respuesta. classifier.dev
             no pide clave ni cuenta y declara que no almacena el texto enviado.
-            El CSV completo se queda en tu navegador y desaparece al recargar la
-            página.
+            El CSV completo se queda en tu navegador. La última sesión
+            clasificada puede guardarse en el almacenamiento local
+            (localStorage) para sobrevivir a un refresco: nunca sale de tu
+            dispositivo y se borra con «Procesar otro CSV» o limpiando los
+            datos del sitio.
           </p>
         </div>
       </section>

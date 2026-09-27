@@ -1,5 +1,7 @@
 # Deskmeter
 
+![CI](https://github.com/yefoi/deskmeter/actions/workflows/ci.yml/badge.svg)
+
 Panel de salud de un helpdesk a partir del CSV de tickets exportado, con la
 clasificación de [classifier.dev](https://classifier.dev) (sin API key ni cuenta) y un
 índice propio. Next.js 15 (App Router), TypeScript, Recharts y papaparse.
@@ -35,9 +37,11 @@ clasificación de [classifier.dev](https://classifier.dev) (sin API key ni cuent
 
 - **Instantáneo y público**: abrir la URL, subir el CSV y ver el panel en segundos. Sin
   demo comercial, sin formulario de contacto y sin esperas de 24-48 horas.
-- **Sin backend propio ni persistencia**: el CSV se procesa en el navegador y no se
-  guarda en ninguna base de datos (otros paneles retienen el export hasta 30 días). Solo
-  viaja a classifier.dev el texto redactado de cada ticket.
+- **Sin backend propio ni persistencia en servidores**: el CSV se procesa en el navegador
+  y no se guarda en ninguna base de datos (otros paneles retienen el export hasta 30
+  días). Solo viaja a classifier.dev el texto redactado de cada ticket. La última sesión
+  clasificada puede quedar en el `localStorage` del navegador para sobrevivir a un
+  refresco, y «Procesar otro CSV» la borra.
 - **Índice con metodología abierta**: pesos, umbrales y límites están en `/metodologia` y
   en `lib/tickets/indice.ts`, no en un informe corporativo cerrado.
 
@@ -84,6 +88,9 @@ npm run typecheck
 npm run lint
 npm run build
 ```
+
+Los cuatro pasos se ejecutan también en CI (`.github/workflows/ci.yml`) en cada push y
+pull request.
 
 No hay variables de entorno: classifier.dev no pide clave y el proyecto funciona en
 local o en Vercel tal cual. `ejemplos/tickets-ejemplo.csv` sirve para probar la subida;
@@ -145,26 +152,33 @@ relativos a los periodos presentes en los datos; con un único periodo valen 0,5
 ```
 lib/tickets/
   csv.ts         parser, alias de columnas y validación de filas
+  codificacion.ts  UTF-8/UTF-16/Latin-1 y BOM al leer archivos
   fechas.ts      semana ISO, mes y lectura de fechas
   pii.ts         redacción de correos, teléfonos y DNI/NIE
   etiquetas.ts   taxonomía, instrucciones y umbral de revisión (es/en)
+  sectores.ts    instrucciones de urgencia por vertical (es/en)
   textos.ts      diccionario de toda la interfaz y los mensajes (es/en)
   idioma.ts      tipo Idioma y guardas
-  clasificar.ts  lotes, reintentos, progreso y composición del ticket
+  clasificar.ts  lotes, reintentos, deduplicación, multi-etiqueta y progreso
+  comparar.ts    comparación de dos periodos
   agregar.ts     resumen, agrupación por periodo y mapa de calor
   indice.ts      índice de salud y pesos
+  persistencia.ts  sesión en localStorage (serialización y versión)
   demo.ts        datos sintéticos deterministas (es/en)
 app/(es)/        portada y metodología en español
 app/en/          portada y /en/methodology en inglés
 app/api/clasificar/route.ts   proxy efímero a classifier.dev
+.github/workflows/ci.yml      tests, typecheck, lint y build en cada push
 ```
 
 ## Privacidad
 
-El CSV se procesa en el navegador y no se persiste en ningún servidor. La API route solo
-reenvía a classifier.dev el texto ya redactado de cada ticket y devuelve la respuesta;
-classifier.dev declara que no almacena el texto. La redacción es por regex: reduce el
-riesgo, no es un anonimizador completo.
+El CSV se procesa en el navegador y no se persiste en ningún servidor. La última sesión
+clasificada puede guardarse en `localStorage` para sobrevivir a un refresco (nunca en un
+servidor) y se borra con «Procesar otro CSV» o limpiando los datos del sitio. La API
+route solo reenvía a classifier.dev el texto ya redactado de cada ticket y devuelve la
+respuesta; classifier.dev declara que no almacena el texto. La redacción es por regex:
+reduce el riesgo, no es un anonimizador completo.
 
 ## Límites
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { clasificarTickets } from "@/lib/tickets/clasificar";
+import { decodificarTexto } from "@/lib/tickets/codificacion";
 import {
   LIMITE_FILAS,
   parsearCsv,
@@ -9,6 +10,14 @@ import {
 } from "@/lib/tickets/csv";
 import { generarTicketsDemo } from "@/lib/tickets/demo";
 import { excelACsv } from "@/lib/tickets/excel";
+import {
+  cargarEstado,
+  deserializarTickets,
+  guardarEstado,
+  limpiarEstado,
+  serializarTickets,
+  VERSION_ESTADO,
+} from "@/lib/tickets/persistencia";
 import type { Sector } from "@/lib/tickets/sectores";
 import type { Ticket, Tier } from "@/lib/tickets/tipos";
 import EsqueletoPanel from "./EsqueletoPanel";
@@ -45,11 +54,70 @@ export default function Deskmeter() {
   const [errorComparacion, setErrorComparacion] = useState<string | null>(null);
   const controlador = useRef<AbortController | null>(null);
   const controladorComparacion = useRef<AbortController | null>(null);
+  const restaurado = useRef(false);
+
+  const persistir = useCallback(
+    (datos: {
+      tickets: Ticket[];
+      fuente: "demo" | "csv";
+      nombreArchivo: string | null;
+      modelos: string[];
+      comparacion: { tickets: Ticket[]; nombre: string } | null;
+    }) => {
+      guardarEstado({
+        version: VERSION_ESTADO,
+        guardadoEn: new Date().toISOString(),
+        idioma,
+        fuente: datos.fuente,
+        nombreArchivo: datos.nombreArchivo,
+        tier,
+        sector,
+        multiEtiqueta,
+        modelos: datos.modelos,
+        tickets: serializarTickets(datos.tickets),
+        comparacion: datos.comparacion
+          ? {
+              nombre: datos.comparacion.nombre,
+              tickets: serializarTickets(datos.comparacion.tickets),
+            }
+          : null,
+      });
+    },
+    [idioma, tier, sector, multiEtiqueta],
+  );
+
+  useEffect(() => {
+    if (restaurado.current) return;
+    restaurado.current = true;
+    const guardado = cargarEstado();
+    if (!guardado || guardado.idioma !== idioma) return;
+    const ticketsGuardados = deserializarTickets(guardado.tickets);
+    if (ticketsGuardados.length === 0) return;
+    setTickets(ticketsGuardados);
+    setFuente(guardado.fuente);
+    setNombreArchivo(guardado.nombreArchivo);
+    setTier(guardado.tier);
+    setSector(guardado.sector);
+    setMultiEtiqueta(guardado.multiEtiqueta);
+    setModelos(guardado.modelos);
+    if (guardado.comparacion) {
+      const comparacionGuardada = deserializarTickets(
+        guardado.comparacion.tickets,
+      );
+      if (comparacionGuardada.length > 0) {
+        setComparacion({
+          tickets: comparacionGuardada,
+          nombre: guardado.comparacion.nombre,
+        });
+      }
+    }
+  }, [idioma]);
 
   const cargarDemo = useCallback(() => {
     controlador.current?.abort();
     controladorComparacion.current?.abort();
-    setTickets(generarTicketsDemo(180, new Date(), idioma));
+    const demoTickets = generarTicketsDemo(180, new Date(), idioma);
+    setTickets(demoTickets);
     setFuente("demo");
     setNombreArchivo(null);
     setProgreso(null);
@@ -60,7 +128,14 @@ export default function Deskmeter() {
     setComparacion(null);
     setProgresoComparacion(null);
     setErrorComparacion(null);
-  }, [idioma]);
+    persistir({
+      tickets: demoTickets,
+      fuente: "demo",
+      nombreArchivo: null,
+      modelos: [],
+      comparacion: null,
+    });
+  }, [idioma, persistir]);
 
   const procesarTexto = useCallback(
     async (texto: string, nombre: string, mapeo?: Mapeo) => {
@@ -129,6 +204,13 @@ export default function Deskmeter() {
         });
         setTickets(clasificado.tickets);
         setModelos(clasificado.modelos);
+        persistir({
+          tickets: clasificado.tickets,
+          fuente: "csv",
+          nombreArchivo: nombre,
+          modelos: clasificado.modelos,
+          comparacion: null,
+        });
         const mensajes: string[] = [];
         if (clasificado.repetidos > 0) {
           mensajes.push(
@@ -156,7 +238,7 @@ export default function Deskmeter() {
         controlador.current = null;
       }
     },
-    [idioma, t, tier, sector, multiEtiqueta],
+    [idioma, t, tier, sector, multiEtiqueta, persistir],
   );
 
   const procesarArchivo = useCallback(
@@ -176,7 +258,7 @@ export default function Deskmeter() {
         }
       } else {
         try {
-          texto = await archivo.text();
+          texto = decodificarTexto(await archivo.arrayBuffer());
         } catch {
           setError(t.deskmeter.errorLectura);
           return;
@@ -217,7 +299,7 @@ export default function Deskmeter() {
         }
       } else {
         try {
-          texto = await archivo.text();
+          texto = decodificarTexto(await archivo.arrayBuffer());
         } catch {
           setErrorComparacion(t.deskmeter.errorLectura);
           return;
@@ -247,7 +329,20 @@ export default function Deskmeter() {
           alProgreso: (hechos, total) =>
             setProgresoComparacion({ hechos, total }),
         });
-        setComparacion({ tickets: clasificado.tickets, nombre: archivo.name });
+        const nuevaComparacion = {
+          tickets: clasificado.tickets,
+          nombre: archivo.name,
+        };
+        setComparacion(nuevaComparacion);
+        if (tickets) {
+          persistir({
+            tickets,
+            fuente: "csv",
+            nombreArchivo,
+            modelos,
+            comparacion: nuevaComparacion,
+          });
+        }
       } catch (fallo) {
         if (!(fallo instanceof DOMException && fallo.name === "AbortError")) {
           setErrorComparacion(
@@ -259,7 +354,17 @@ export default function Deskmeter() {
         controladorComparacion.current = null;
       }
     },
-    [idioma, t, tier, sector, multiEtiqueta],
+    [
+      idioma,
+      t,
+      tier,
+      sector,
+      multiEtiqueta,
+      persistir,
+      tickets,
+      nombreArchivo,
+      modelos,
+    ],
   );
 
   const quitarComparacion = () => {
@@ -272,6 +377,7 @@ export default function Deskmeter() {
   const reiniciar = () => {
     controlador.current?.abort();
     controladorComparacion.current?.abort();
+    limpiarEstado();
     setTickets(null);
     setFuente(null);
     setNombreArchivo(null);

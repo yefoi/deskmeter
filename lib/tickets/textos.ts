@@ -11,7 +11,7 @@ const TEXTOS_ES = {
   },
   pie: {
     privacidad:
-      "El CSV se procesa en tu navegador y nada se guarda en el servidor.",
+      "El CSV se procesa en tu navegador y nada se guarda en el servidor; la última sesión queda solo en tu navegador.",
     clasificacion: "Clasificación:",
   },
   subidor: {
@@ -39,7 +39,7 @@ const TEXTOS_ES = {
     multiAyuda:
       "Una pasada multi-etiqueta extra: muestra qué otras áreas toca cada ticket y gasta más cuota.",
     privacidad:
-      "El CSV se procesa en tu navegador. Solo sale hacia classifier.dev el texto redactado de cada ticket (correos, teléfonos y DNI/NIE sustituidos antes de enviar). Nada se guarda en el servidor.",
+      "El CSV se procesa en tu navegador. Solo sale hacia classifier.dev el texto redactado de cada ticket (correos, teléfonos y DNI/NIE sustituidos antes de enviar). Nada se guarda en el servidor; la última sesión puede quedarse en el almacenamiento local de tu navegador para sobrevivir a un refresco, se borra con «Procesar otro CSV» y nunca sale de tu dispositivo.",
   },
   vistaPrevia: {
     titulo: "Panel de salud",
@@ -246,7 +246,7 @@ const TEXTOS_ES = {
       {
         titulo: "Sin backend ni retención",
         texto:
-          "El CSV se procesa en tu navegador y no se persiste nada: recargas y desaparece. Algunos paneles conservan tu export hasta 30 días.",
+          "El CSV se procesa en tu navegador y no se persiste nada en ningún servidor: la última sesión puede quedarse solo en tu navegador y se borra con un clic. Algunos paneles conservan tu export hasta 30 días.",
       },
       {
         titulo: "Metodología abierta",
@@ -260,7 +260,7 @@ const TEXTOS_ES = {
       ["Primer dato", "Segundos", "Demo comercial o 24-48 h"],
       ["Acceso", "URL pública, sin registro", "Formulario de contacto"],
       ["Procesado del CSV", "En tu navegador", "Se sube a su nube"],
-      ["Retención", "Ninguna", "Hasta 30 días (según proveedor)"],
+      ["Retención", "Ninguna en servidores", "Hasta 30 días (según proveedor)"],
       ["Índice de salud", "Fórmula abierta y versionada", "Informe cerrado"],
       ["Para empezar", "Abrir la URL", "Agendar una llamada"],
     ],
@@ -322,7 +322,7 @@ const TEXTOS_EN: Textos = {
   },
   pie: {
     privacidad:
-      "The CSV is processed in your browser and nothing is stored on the server.",
+      "The CSV is processed in your browser and nothing is stored on the server; the last session stays only in your browser.",
     clasificacion: "Classification:",
   },
   subidor: {
@@ -350,7 +350,7 @@ const TEXTOS_EN: Textos = {
     multiAyuda:
       "An extra multi-label pass: shows which other areas each ticket touches and uses more quota.",
     privacidad:
-      "The CSV is processed in your browser. Only the redacted text of each ticket leaves towards classifier.dev (emails, phones and ID numbers replaced before sending). Nothing is stored on the server.",
+      "The CSV is processed in your browser. Only the redacted text of each ticket leaves towards classifier.dev (emails, phones and ID numbers replaced before sending). Nothing is stored on the server; the last session may stay in your browser's local storage to survive a reload, it is removed with “Process another CSV” and it never leaves your device.",
   },
   vistaPrevia: {
     titulo: "Health dashboard",
@@ -556,7 +556,7 @@ const TEXTOS_EN: Textos = {
       {
         titulo: "No backend, no retention",
         texto:
-          "The CSV is processed in your browser and nothing is persisted: reload and it's gone. Some dashboards keep your export for up to 30 days.",
+          "The CSV is processed in your browser and nothing is persisted on any server: the last session may stay only in your browser and is wiped with one click. Some dashboards keep your export for up to 30 days.",
       },
       {
         titulo: "Open methodology",
@@ -570,7 +570,7 @@ const TEXTOS_EN: Textos = {
       ["First data", "Seconds", "Sales demo or 24-48 h"],
       ["Access", "Public URL, no sign-up", "Contact form"],
       ["CSV processing", "In your browser", "Uploaded to their cloud"],
-      ["Retention", "None", "Up to 30 days (provider-dependent)"],
+      ["Retention", "None on servers", "Up to 30 days (provider-dependent)"],
       ["Health index", "Open, versioned formula", "Closed report"],
       ["To get started", "Open the URL", "Book a call"],
     ],

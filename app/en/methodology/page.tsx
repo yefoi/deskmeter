@@ -42,7 +42,7 @@ const PREGUNTAS = [
   {
     pregunta: "Are my tickets stored on any server?",
     respuesta:
-      "No. The CSV is processed in the browser and disappears when you reload the page. Only the redacted text of each ticket travels to classifier.dev, and classifier.dev states that it does not store it.",
+      "No. The CSV is processed in the browser and is not sent to any server; the last session may stay only in your browser's local storage and is removed on reset or when clearing site data. Only the redacted text of each ticket travels to classifier.dev, and it states that it does not store it.",
   },
   {
     pregunta: "How is the health index computed?",
@@ -360,8 +360,10 @@ export default function Page() {
             There is no stateful backend: the API route only forwards the
             redacted texts to classifier.dev and returns the response.
             classifier.dev asks for no key or account and states that it does
-            not store the submitted text. The full CSV stays in your browser and
-            disappears when you reload the page.
+            not store the submitted text. The full CSV stays in your browser.
+            The last classified session may be kept in local storage
+            (localStorage) to survive a reload: it never leaves your device and
+            is wiped with “Process another CSV” or by clearing site data.
           </p>
         </div>
       </section>
